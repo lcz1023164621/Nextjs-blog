@@ -3,8 +3,21 @@
 import { Button } from "@/components/ui/button"
 import { ClapperboardIcon, UserCircleIcon } from "lucide-react"
 import { UserButton, SignInButton, SignedIn, SignedOut } from "@clerk/nextjs"
+import { useState, useEffect } from "react"
 
 export const AuthButton = () => {
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    if (!mounted) {
+        return (
+            <div className="w-10 h-10" />
+        )
+    }
+
     return(
     <>
     <SignedIn>
