@@ -26,9 +26,9 @@ export const HomeNavbar = () => {
                         </NavigationMenuItem>
 
                         <NavigationMenuItem>
-                            <Link href="/blog" legacyBehavior passHref>
+                            <Link href="/person" legacyBehavior passHref>
                                 <NavigationMenuLink className={navigationMenuTriggerStyle() + " text-sm md:text-base"}>
-                                    博客
+                                    个人
                                 </NavigationMenuLink>
                             </Link>
                         </NavigationMenuItem>
