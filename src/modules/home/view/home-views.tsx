@@ -1,12 +1,14 @@
 import { HomeContent } from "../components/home-content/home-content"
 import { HomeNavbar } from "../components/home-navbar/home-navbar"
+import { HomePublic } from "../components/home-public/home-public"
 
 
 export const Homeview = () => {
     return(
-        <>
-            <HomeNavbar />
-            <HomeContent />
-        </>
+            <div className="max-w-3xl mx-auto px-4 py-6">
+                <HomeNavbar />
+                <HomePublic />
+                <HomeContent />
+            </div>
     )
 }

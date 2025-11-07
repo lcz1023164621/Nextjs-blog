@@ -1,6 +1,8 @@
 import { ThumbsUp, MessageSquare, Share2, Bookmark, Heart, MoreHorizontal } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
+import Link from 'next/link';
 
 interface TextContentCardProps {
   title: string;
@@ -26,23 +28,38 @@ export const HomeContentCard = ({
   stats 
 }: TextContentCardProps) => {
   return (
+
     <Card className="p-4 hover:bg-accent/5 transition-colors border-b rounded-none">
       {/* 标题 */}
+    <Link href={`/post/${title}`}>
       <h3 className="text-[17px] font-medium mb-3 leading-relaxed">
         {title}
       </h3>
-
+    </Link>
+    
       <div className="flex gap-3">
         {/* 左侧缩略图(可选) */}
         {thumbnail && (
-          <div className="w-[120px] h-20 flex-shrink-0 rounded overflow-hidden bg-gray-100">
-            <img 
-              src={thumbnail} 
-              alt={title}
-              className="w-full h-full object-cover"
-            />
+          <div className="w-[120px] h-20 rounded flex-shrink-0 overflow-hidden bg-gray-100 flex items-center justify-center">
+            {thumbnail.endsWith('.svg') ? (
+              <img 
+                src={thumbnail} 
+                alt={title}
+                className="w-full h-full object-contain p-2"
+              />
+            ) : (
+              <Image 
+                src={thumbnail} 
+                alt={title}
+                width={100}
+                height={100}
+                className="object-cover"
+                sizes="50px"
+              />
+            )}
           </div>
         )}
+
 
         {/* 内容区域 */}
         <div className="flex-1 min-w-0">
@@ -50,7 +67,7 @@ export const HomeContentCard = ({
             <span className="font-medium text-gray-900">{author.name}:</span>{' '}
             {content}
             <button className="text-blue-600 hover:text-blue-700 ml-1 inline-flex items-center">
-              阅读全文 
+              阅读全文
               <svg className="w-3 h-3 ml-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
               </svg>
