@@ -5,22 +5,80 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { UserButton, useUser } from "@clerk/nextjs"
-import { Hash, ImageIcon, Smile, Video } from "lucide-react"
-import { useState } from "react"
+import { Hash, ImageIcon, Smile, Video, X } from "lucide-react"
+import { useState, useRef } from "react"
 import { trpc } from "@/trpc/client"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 export const HomePublic = () => {
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   
   const router = useRouter()
   const { isSignedIn } = useUser()
 
   // 创建文章的 mutation
   const createPostMutation = trpc.post.createPost.useMutation()
+
+  // 处理图片上传
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    // 检查用户是否已登录
+    if (!isSignedIn) {
+      toast.error("请先登录")
+      router.push("/sign-in")
+      return
+    }
+
+    setIsUploading(true)
+
+    try {
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || '上传失败')
+        }
+
+        const data = await response.json()
+        return data.url
+      })
+
+      const urls = await Promise.all(uploadPromises)
+      setUploadedImages(prev => [...prev, ...urls])
+      toast.success(`成功上传 ${urls.length} 张图片`)
+    } catch (error) {
+      console.error('图片上传失败:', error)
+      const errorMessage = error instanceof Error ? error.message : '图片上传失败'
+      toast.error(errorMessage)
+    } finally {
+      setIsUploading(false)
+      // 清空 input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  // 删除图片
+  const handleRemoveImage = (index: number) => {
+    setUploadedImages(prev => prev.filter((_, i) => i !== index))
+  }
 
   // 处理发表按钮点击
   const handlePublish = async () => {
@@ -51,11 +109,13 @@ export const HomePublic = () => {
       await createPostMutation.mutateAsync({
         title: title.trim(),
         content: content.trim(),
+        imageUrls: uploadedImages.length > 0 ? uploadedImages : undefined,
       })
 
       // 成功后清空输入框
       setTitle("")
       setContent("")
+      setUploadedImages([])
       toast.success("发表成功！")
     } catch (error) {
       console.error("发表失败:", error)
@@ -98,6 +158,30 @@ export const HomePublic = () => {
             onChange={(e) => setContent(e.target.value)}
           />
 
+          {/* 图片预览 */}
+          {uploadedImages.length > 0 && (
+            <div className="flex flex-wrap gap-2 px-3 py-2">
+              {uploadedImages.map((url, index) => (
+                <div key={index} className="relative w-20 h-20 rounded-md overflow-hidden border">
+                  <Image
+                    src={url}
+                    alt={`上传图片 ${index + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="80px"
+                  />
+                  <button
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"
+                    type="button"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* 工具栏 */}
           <div className="flex items-center gap-4 mt-3">
             <Button
@@ -118,9 +202,21 @@ export const HomePublic = () => {
               variant="ghost"
               size="sm"
               className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              type="button"
             >
               <ImageIcon className="w-5 h-5" />
             </Button>
+            {/* 隐藏的文件输入 */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleImageUpload}
+            />
             <Button
               variant="ghost"
               size="sm"
