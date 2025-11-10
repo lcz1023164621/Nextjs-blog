@@ -42,7 +42,7 @@ export const HomeContentCard = ({
       <div className="flex gap-3">
         {/* 左侧缩略图(可选) */}
         {thumbnail && (
-          <div className="w-[120px] h-20 rounded flex-shrink-0 overflow-hidden bg-gray-100 flex items-center justify-center">
+          <div className="w-[120px] h-20 rounded flex-shrink-0 overflow-hidden bg-gray-100">
             {thumbnail.endsWith('.svg') ? (
               <img 
                 src={thumbnail} 
@@ -53,10 +53,10 @@ export const HomeContentCard = ({
               <Image 
                 src={thumbnail} 
                 alt={title}
-                width={100}
-                height={100}
-                className="object-cover"
-                sizes="50px"
+                width={120}
+                height={80}
+                className="w-full h-full object-cover"
+                sizes="120px"
               />
             )}
           </div>

@@ -144,7 +144,7 @@ export const HomeContent = () => {
                     key={post.id}
                     title={post.title}
                     content={post.content}
-                    thumbnail={post.images[0]?.imageUrl || '/panda.jpg'}
+                    thumbnail={post.images[0]?.imageUrl || post.author.avatar || undefined}
                     author={{
                         name: post.author.username,
                     }}
@@ -155,7 +155,7 @@ export const HomeContent = () => {
                         isFavorited: false,
                         isLiked: false,
                     }}
-                    createdAt={post.createdAt.toString()}
+                    createdAt={post.createdAt.toISOString()}
                 />
             ))}
 
