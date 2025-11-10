@@ -22,6 +22,7 @@ export const HomePublic = () => {
   
   const router = useRouter()
   const { isSignedIn } = useUser()
+  const utils = trpc.useUtils() // 获取 TRPC utils 用于缓存失效
 
   // 创建文章的 mutation
   const createPostMutation = trpc.post.createPost.useMutation()
@@ -116,6 +117,12 @@ export const HomePublic = () => {
       setTitle("")
       setContent("")
       setUploadedImages([])
+      
+      // 使缓存失效并强制重新获取（忽略 staleTime）
+      await utils.post.getPosts.invalidate(undefined, {
+        refetchType: 'active', // 只重新获取活跃的查询
+      })
+      
       toast.success("发表成功！")
     } catch (error) {
       console.error("发表失败:", error)

@@ -18,6 +18,7 @@ interface TextContentCardProps {
     isFavorited?: boolean;
     isLiked?: boolean;
   };
+  createdAt:string;
 }
 
 export const HomeContentCard = ({ 
@@ -25,13 +26,14 @@ export const HomeContentCard = ({
   content, 
   thumbnail,
   author,
-  stats 
+  stats ,
+  createdAt,
 }: TextContentCardProps) => {
   return (
 
     <Card className="p-4 hover:bg-accent/5 transition-colors border-b rounded-none rounded-lg">
       {/* 标题 */}
-    <Link href={`/post/${title}`}>
+    <Link href={`/post/${title}/${createdAt}`}>
       <h3 className="text-[17px] font-medium mb-3 leading-relaxed">
         {title}
       </h3>
