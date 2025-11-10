@@ -31,7 +31,7 @@ export const HomeContentCard = ({
 }: TextContentCardProps) => {
   return (
 
-    <Card className="p-4 hover:bg-accent/5 transition-colors border-b rounded-none rounded-lg">
+    <Card className="p-4 hover:bg-accent/5 transition-colors border-b rounded-lg">
       {/* 标题 */}
     <Link href={`/post/${title}/${createdAt}`}>
       <h3 className="text-[17px] font-medium mb-3 leading-relaxed">
