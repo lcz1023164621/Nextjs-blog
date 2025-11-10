@@ -29,7 +29,7 @@ export const HomeContentCard = ({
 }: TextContentCardProps) => {
   return (
 
-    <Card className="p-4 hover:bg-accent/5 transition-colors border-b rounded-none">
+    <Card className="p-4 hover:bg-accent/5 transition-colors border-b rounded-none rounded-lg">
       {/* 标题 */}
     <Link href={`/post/${title}`}>
       <h3 className="text-[17px] font-medium mb-3 leading-relaxed">
@@ -64,7 +64,6 @@ export const HomeContentCard = ({
         {/* 内容区域 */}
         <div className="flex-1 min-w-0">
           <p className="text-[15px] text-gray-700 leading-[1.7] line-clamp-3">
-            <span className="font-medium text-gray-900">{author.name}:</span>{' '}
             {content}
             <button className="text-blue-600 hover:text-blue-700 ml-1 inline-flex items-center">
               阅读全文
@@ -142,6 +141,8 @@ export const HomeContentCard = ({
           <Heart className={`w-[14px] h-[14px] ${stats.isLiked ? 'fill-current' : ''}`} />
           喜欢
         </Button>
+
+        <span className="font-medium text-gray-900">作者：{author.name}</span>{' '}
 
         {/* 更多 */}
         <Button 

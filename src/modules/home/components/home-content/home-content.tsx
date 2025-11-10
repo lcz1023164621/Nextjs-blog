@@ -1,39 +1,86 @@
+"use client"
+
+import { trpc } from "@/trpc/client"
 import { HomeContentCard } from "./home-content-card"
+import { useEffect, useState } from "react"
 
 export const HomeContent = () => {
-    return(
-        <>
-            <HomeContentCard 
-                title="1024 程序员节「分红」现场：第一批鸿蒙开发者激励，有人真的领到钱或福利了吗?"
-                content="很多开发者已经在网上晒出了激励金，收到这样那样的作品，就表示开发者通过鸿蒙开发者激励计划获得了真金白银的奖励。根据HarmonyOS开发者官网的信息，这个激励计划的非常慷慨优厚，面向所有... "
-                thumbnail="/panda.jpg"
-                author={{
-                name: "Morgan"
-                }}
-                stats={{
-                agrees: 167,
-                comments: 9,
-                isAgreed: true,
-                isFavorited: false,
-                isLiked: false
-            }}
-            />
+    const [mounted, setMounted] = useState(false)
+    
+    // 获取文章列表
+    const { data, isLoading, error } = trpc.post.getPosts.useQuery({
+        limit: 10,
+        offset: 0,
+    })
 
-            <HomeContentCard 
-                title="1024 程序员节「分红」现场：第一批鸿蒙开发者激励，有人真的领到钱或福利了吗?"
-                content="很多开发者已经在网上晒出了激励金，收到这样那样的作品，就表示开发者通过鸿蒙开发者激励计划获得了真金白银的奖励。根据HarmonyOS开发者官网的信息，这个激励计划的非常慷慨优厚，面向所有... "
-                thumbnail="/panda.jpg"
-                author={{
-                name: "Morgan"
-                }}
-                stats={{
-                agrees: 167,
-                comments: 9,
-                isAgreed: true,
-                isFavorited: false,
-                isLiked: false
-            }}
-            />
-        </>
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    // 防止 SSR Hydration 不匹配
+    if (!mounted) {
+        return (
+            <div className="space-y-4">
+                {[1, 2].map((i) => (
+                    <div key={i} className="p-4 border rounded-lg animate-pulse">
+                        <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    </div>
+                ))}
+            </div>
+        )
+    }
+
+    if (isLoading) {
+        return (
+            <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                    <div key={i} className="p-4 border rounded-lg animate-pulse">
+                        <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                    </div>
+                ))}
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="p-4 border border-red-200 rounded-lg bg-red-50">
+                <p className="text-red-600">加载文章失败：{error.message}</p>
+            </div>
+        )
+    }
+
+    if (!data?.posts || data.posts.length === 0) {
+        return (
+            <div className="p-8 text-center border rounded-lg bg-gray-50">
+                <p className="text-gray-500">暂无文章，请发表第一篇文章吧！</p>
+            </div>
+        )
+    }
+
+    return (
+        <div className="space-y-4">
+            {data.posts.map((post) => (
+                <HomeContentCard 
+                    key={post.id}
+                    title={post.title}
+                    content={post.content}
+                    thumbnail={post.images[0]?.imageUrl || '/panda.jpg'} // 第一张图片或默认图
+                    author={{
+                        name: post.author.username,
+                    }}
+                    stats={{
+                        agrees: 0,
+                        comments: 0,
+                        isAgreed: false,
+                        isFavorited: false,
+                        isLiked: false,
+                    }}
+                />
+            ))}
+        </div>
     )
 }

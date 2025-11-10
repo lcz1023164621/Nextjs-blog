@@ -7,7 +7,10 @@ export const Homeview = () => {
     return(
             <div className="max-w-3xl mx-auto px-4 py-6">
                 <HomeNavbar />
+                
+                <div className="mb-4">
                 <HomePublic />
+                </div>
                 <HomeContent />
             </div>
     )

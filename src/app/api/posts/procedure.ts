@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { protectedProcedure, createTRPCRouter } from '@/trpc/init';
+import { protectedProcedure, createTRPCRouter, baseProcedure } from '@/trpc/init';
 import { db } from '@/db';
 import { posts, users, postImages } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -139,6 +139,53 @@ export const postRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: '创建文章失败，请稍后重试',
+        });
+      }
+    }),
+
+  // 获取文章列表
+  getPosts: baseProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(10), //每页显示的文章数量
+        offset: z.number().min(0).default(0), //分页偏移
+      }).optional()
+    )
+    .query(async ({ input }) => {
+      const { limit = 10, offset = 0 } = input || {};
+
+      try {
+        // 查询文章，包含作者和图片信息
+        const postList = await db.query.posts.findMany({
+          limit,
+          offset,
+          orderBy: (posts, { desc }) => [desc(posts.createdAt)],
+          with: {
+            author: {
+              columns: {
+                id: true,
+                username: true,
+                avatar: true,
+              },
+            },
+            images: {
+              columns: {
+                id: true,
+                imageUrl: true,
+              },
+            },
+          },
+        });
+
+        return {
+          success: true,
+          posts: postList,
+        };
+      } catch (error) {
+        console.error('获取文章列表失败:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '获取文章列表失败',
         });
       }
     }),
