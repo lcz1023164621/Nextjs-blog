@@ -201,13 +201,45 @@ export const postRouter = createTRPCRouter({
       const { id } = input;
 
       try{
-        const post = await db.query.posts.findFirst(
-            { where:eq(posts.id,id) },
-        )
-        return { success: true, post }
+        const post = await db.query.posts.findFirst({
+          where: eq(posts.id, id),
+          with: {
+            author: {
+              columns: {
+                id: true,
+                username: true,
+                avatar: true,
+              },
+            },
+            images: {
+              columns: {
+                id: true,
+                imageUrl: true,
+              },
+            },
+          },
+        });
+
+        if (!post) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '文章不存在',
+          });
+        }
+
+        return { success: true, post };
       }
       catch(error){
         console.error('获取文章失败:', error);
+        
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '获取文章失败',
+        });
       }
     })
 });

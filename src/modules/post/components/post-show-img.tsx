@@ -9,30 +9,44 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
+import Image from "next/image"
+import { Post } from "@/model/post"
 
-export const PostShowImg = ({ postId }: { postId: string }) => {
+
+export const PostShowImg = ({ post }: { post: Post }) => {
+
   return (
-    <div>
-    <Carousel className="w-full max-w-xs">
-      <CarouselContent>
-        {Array.from({ length: 5 }).map((_, index) => (
-          <CarouselItem key={index}>
-            <div className="p-1">
-              <Card>
-                <CardContent className="flex aspect-square items-center justify-center p-6">
-                  <span className="text-4xl font-semibold">{index + 1}</span>
-                </CardContent>
-              </Card>
-            </div>
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-      <CarouselPrevious />
-      <CarouselNext />
-    </Carousel>
+    <>
 
-    <p>{postId}</p>
-    
-    </div>
+      <Carousel className="w-full">
+        <CarouselContent>
+          {post.images.map((image, index) => (
+            <CarouselItem key={image.id}>
+              <div className="p-1">
+                <Card>
+                  <CardContent className="flex aspect-square items-center justify-center p-0 relative overflow-hidden">
+                    <Image
+                      src={image.imageUrl}
+                      alt={`${post.title} - 图片 ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        {post.images.length > 1 && (
+          <>
+            <CarouselPrevious />
+            <CarouselNext />
+          </>
+        )}
+      </Carousel>
+
+
+      </>
   )
 }
