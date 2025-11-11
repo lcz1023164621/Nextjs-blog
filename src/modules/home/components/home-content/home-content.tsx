@@ -21,7 +21,7 @@ type Post = {
         id: string
         imageUrl: string
     }[]
-    createdAt: Date
+
 }
 
 export const HomeContent = () => {
@@ -142,6 +142,7 @@ export const HomeContent = () => {
             {allPosts.map((post) => (
                 <HomeContentCard 
                     key={post.id}
+                    id = {post.id}
                     title={post.title}
                     content={post.content}
                     thumbnail={post.images[0]?.imageUrl || post.author.avatar || undefined}
@@ -155,7 +156,7 @@ export const HomeContent = () => {
                         isFavorited: false,
                         isLiked: false,
                     }}
-                    createdAt={post.createdAt.toISOString()}
+                    
                 />
             ))}
 

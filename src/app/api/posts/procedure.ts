@@ -189,6 +189,27 @@ export const postRouter = createTRPCRouter({
         });
       }
     }),
+
+    //根据id获取文章信息
+    getPostById:baseProcedure
+    .input(
+        z.object(
+            { id: z.string() }
+        )
+    )
+    .query(async ({ input }) => {
+      const { id } = input;
+
+      try{
+        const post = await db.query.posts.findFirst(
+            { where:eq(posts.id,id) },
+        )
+        return { success: true, post }
+      }
+      catch(error){
+        console.error('获取文章失败:', error);
+      }
+    })
 });
 
 // 导出类型

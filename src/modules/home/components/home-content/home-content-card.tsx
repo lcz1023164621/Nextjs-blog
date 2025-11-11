@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 interface TextContentCardProps {
+  id: string;
   title: string;
   content: string;
   thumbnail?: string;
@@ -18,7 +19,6 @@ interface TextContentCardProps {
     isFavorited?: boolean;
     isLiked?: boolean;
   };
-  createdAt:string;
 }
 
 export const HomeContentCard = ({ 
@@ -27,13 +27,13 @@ export const HomeContentCard = ({
   thumbnail,
   author,
   stats ,
-  createdAt,
+  id,
 }: TextContentCardProps) => {
   return (
 
     <Card className="p-4 hover:bg-accent/5 transition-colors border-b rounded-lg">
       {/* 标题 */}
-    <Link href={`/post/${title}/${createdAt}`}>
+    <Link href={`/post/${id}`}>
       <h3 className="text-[17px] font-medium mb-3 leading-relaxed">
         {title}
       </h3>
