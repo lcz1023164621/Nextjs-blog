@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { Card, CardContent } from "@/components/ui/card"
 import {
   Carousel,
   CarouselContent,
@@ -16,37 +15,34 @@ import { Post } from "@/model/post"
 export const PostShowImg = ({ post }: { post: Post }) => {
 
   return (
-    <>
-
-      <Carousel className="w-full">
-        <CarouselContent>
-          {post.images.map((image, index) => (
-            <CarouselItem key={image.id}>
-              <div className="p-1">
-                <Card>
-                  <CardContent className="flex aspect-square items-center justify-center p-0 relative overflow-hidden">
-                    <Image
-                      src={image.imageUrl}
-                      alt={`${post.title} - 图片 ${index + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        {post.images.length > 1 && (
-          <>
-            <CarouselPrevious />
-            <CarouselNext />
-          </>
-        )}
-      </Carousel>
-
-
-      </>
+    <div className="relative w-full h-screen flex items-center justify-center bg-gray-100 group p-4">
+      <div className="relative w-full h-full flex items-center justify-center bg-gray-200 rounded-2xl overflow-hidden">
+        <Carousel className="w-full h-full">
+          <CarouselContent className="h-full">
+            {post.images.map((image, index) => (
+              <CarouselItem key={image.id} className="h-full flex items-center justify-center">
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <Image
+                    src={image.imageUrl}
+                    alt={`${post.title} - 图片 ${index + 1}`}
+                    width={0}
+                    height={0}
+                    sizes="100vw"
+                    className="w-full h-auto max-h-full object-contain"
+                    priority={index === 0}
+                  />
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          {post.images.length > 1 && (
+            <>
+              <CarouselPrevious className="left-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <CarouselNext className="right-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </>
+          )}
+        </Carousel>
+      </div>
+    </div>
   )
 }

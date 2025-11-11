@@ -18,14 +18,19 @@ export const PostView = ({ post }: { post: Post }) => {
 
 
     return(
-        <div className="w-full max-w-4xl mx-auto p-4">
-            <PostTitle post={post} />
+        <div className="flex h-screen">
+            {/* 左侧：图片展示区 - 占据左侧空间 */}
+            <div className="flex-1">
+                {IsHasPicture && <PostShowImg post={post} />}
+            </div>
             
-            {IsHasPicture && <PostShowImg post={post} />}
-            
-            <PostContent post={post} />
+            {/* 右侧：信息栏 - 固定宽度 */}
+            <div className="w-96 bg-white overflow-y-auto">
+                <PostTitle post={post} />
+                <PostContent post={post} />
+                {/* 未来添加评论区 */}
+            </div>
         </div>
-
         
     )
 }
