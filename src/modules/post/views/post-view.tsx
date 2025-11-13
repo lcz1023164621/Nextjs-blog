@@ -40,7 +40,7 @@ export const PostView = ({ post }: { post: Post }) => {
                 
                 {/* 固定在底部的评论框 */}
                 <div className="fixed bottom-0 right-0 w-96 bg-white border-t z-40">
-                    <PostComment />
+                    <PostComment postId={post.id} />
                 </div>
             </div>
         </div>
