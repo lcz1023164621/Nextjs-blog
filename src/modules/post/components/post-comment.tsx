@@ -1,31 +1,47 @@
 "use client"
 
 import { UserButton } from "@clerk/nextjs"
-import { Heart, Star, MessageCircle, Share2, Send } from "lucide-react"
-import { useState } from "react"
+import { Heart, Star, MessageCircle, Share2, Send, X } from "lucide-react"
+import { useState, useEffect } from "react"
 import { trpc } from "@/trpc/client"
 import { toast } from "sonner"
 
-interface PostCommentProps {
-    postId: string;
+interface ReplyTo {
+    commentId: string;
+    username: string;
 }
 
-export const PostComment = ({ postId }: PostCommentProps) => {
+interface PostCommentProps {
+    postId: string;
+    replyTo: ReplyTo | null;
+    onCancelReply: () => void;
+}
+
+export const PostComment = ({ postId, replyTo, onCancelReply }: PostCommentProps) => {
     const [comment, setComment] = useState("")
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const utils = trpc.useUtils();
 
+    // 当回复对象改变时，更新输入框占位符
+    useEffect(() => {
+        if (replyTo) {
+            // 可以选择性地在这里添加 @用户名 到输入框
+            // setComment(`@${replyTo.username} `);
+        }
+    }, [replyTo]);
+
     // 创建评论的 mutation
     const createCommentMutation = trpc.comment.createComment.useMutation({
         onSuccess: () => {
-            toast.success("评论发布成功");
+            toast.success(replyTo ? "回复发布成功" : "评论发布成功");
             setComment(""); // 清空输入框
+            onCancelReply(); // 取消回复状态
             // 刷新评论列表
             utils.comment.getCommentsByPostId.invalidate({ postId });
         },
         onError: (error) => {
-            toast.error(error.message || "评论发布失败");
+            toast.error(error.message || "发布失败");
         },
         onSettled: () => {
             setIsSubmitting(false);
@@ -35,12 +51,12 @@ export const PostComment = ({ postId }: PostCommentProps) => {
     // 提交评论
     const handleSubmitComment = () => {
         if (!comment.trim()) {
-            toast.error("评论内容不能为空");
+            toast.error("内容不能为空");
             return;
         }
 
         if (comment.length > 1000) {
-            toast.error("评论最多1000个字符");
+            toast.error("内容最多1000个字符");
             return;
         }
 
@@ -48,6 +64,7 @@ export const PostComment = ({ postId }: PostCommentProps) => {
         createCommentMutation.mutate({
             content: comment.trim(),
             postId,
+            parentId: replyTo?.commentId, // 如果是回复，则传入父评论ID
         });
     };
 
@@ -57,10 +74,32 @@ export const PostComment = ({ postId }: PostCommentProps) => {
             e.preventDefault();
             handleSubmitComment();
         }
+        // ESC 键取消回复
+        if (e.key === "Escape" && replyTo) {
+            onCancelReply();
+        }
     };
 
     return(
         <div className="p-4">
+            {/* 回复标签 */}
+            {replyTo && (
+                <div className="flex items-center justify-between bg-blue-50 rounded-lg px-3 py-2 mb-2">
+                    <div className="flex items-center gap-2">
+                        <MessageCircle className="w-4 h-4 text-blue-500" />
+                        <span className="text-sm text-gray-700">
+                            回复 <span className="font-medium text-blue-600">@{replyTo.username}</span>
+                        </span>
+                    </div>
+                    <button
+                        onClick={onCancelReply}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
+
             {/* 评论输入框 - 添加圆角背景 */}
             <div className="flex items-center gap-3 bg-gray-50 rounded-full px-4 py-2 mb-3">
                 {/* Clerk 头像 */}
@@ -77,11 +116,11 @@ export const PostComment = ({ postId }: PostCommentProps) => {
                 {/* 输入框 */}
                 <input
                     type="text"
-                    placeholder="说点什么..."
+                    placeholder={replyTo ? `回复 @${replyTo.username}...` : "说点什么..."}
                     className="flex-1 bg-transparent border-none outline-none text-[14px] text-gray-600 placeholder:text-gray-400"
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    onKeyPress={handleKeyPress}
+                    onKeyDown={handleKeyPress}
                     disabled={isSubmitting}
                 />
 

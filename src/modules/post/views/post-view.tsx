@@ -11,11 +11,23 @@ import { PostCommentShow } from "../components/post-comment-show"
 export const PostView = ({ post }: { post: Post }) => {
 
     const [IsHasPicture , setIsHasPicture] = useState(false);
+    const [replyTo, setReplyTo] = useState<{ commentId: string; username: string } | null>(null);
 
     useEffect(() => {
     if(post.images && post.images.length > 0) 
         setIsHasPicture(true);
     } , [post])
+
+    // 处理回复操作
+    const handleReply = (commentId: string, username: string) => {
+        setReplyTo({ commentId, username });
+        // 可以选择滚动到评论输入框
+    };
+
+    // 取消回复
+    const handleCancelReply = () => {
+        setReplyTo(null);
+    };
 
 
 
@@ -41,14 +53,18 @@ export const PostView = ({ post }: { post: Post }) => {
                     {/* 评论列表 */}
                     <div className="px-4 py-4">
                         <h3 className="text-sm font-semibold text-gray-900 mb-4">评论</h3>
-                        <PostCommentShow postId={post.id} />
+                        <PostCommentShow postId={post.id} onReply={handleReply} />
                     </div>
                 </div>
                
                 
                 {/* 固定在底部的评论框 */}
                 <div className="fixed bottom-0 right-0 w-96 bg-white border-t z-40">
-                    <PostComment postId={post.id} />
+                    <PostComment 
+                        postId={post.id} 
+                        replyTo={replyTo}
+                        onCancelReply={handleCancelReply}
+                    />
                 </div>
             </div>
         </div>

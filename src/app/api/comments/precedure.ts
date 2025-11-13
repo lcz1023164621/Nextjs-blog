@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { protectedProcedure, createTRPCRouter, baseProcedure } from '@/trpc/init';
 import { db } from '@/db';
 import { comments, users, posts } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 
 export const CommentRouter = createTRPCRouter({
@@ -119,9 +119,12 @@ export const CommentRouter = createTRPCRouter({
           });
         }
 
-        // 查询评论，包含作者信息和回复
+        // 查询评论，只获取顶级评论（parentId 为 null），包含作者信息和回复
         const commentList = await db.query.comments.findMany({
-          where: eq(comments.postId, postId),
+          where: and(
+            eq(comments.postId, postId),
+            isNull(comments.parentId) // 只获取顶级评论
+          ),
           limit,
           offset,
           orderBy: (comments, { desc }) => [desc(comments.createdAt)],

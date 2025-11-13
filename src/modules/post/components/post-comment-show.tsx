@@ -4,13 +4,14 @@ import { trpc } from "@/trpc/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
-import { Loader2, MessageCircle } from "lucide-react";
+import { Loader2, MessageCircle, Reply } from "lucide-react";
 
 interface PostCommentShowProps {
     postId: string;
+    onReply: (commentId: string, username: string) => void;
 }
 
-export const PostCommentShow = ({ postId }: PostCommentShowProps) => {
+export const PostCommentShow = ({ postId, onReply }: PostCommentShowProps) => {
     // 获取评论列表
     const { data, isLoading, error } = trpc.comment.getCommentsByPostId.useQuery({
         postId,
@@ -82,9 +83,18 @@ export const PostCommentShow = ({ postId }: PostCommentShowProps) => {
                             </div>
 
                             {/* 评论文本 */}
-                            <p className="text-sm text-gray-700 break-words">
+                            <p className="text-sm text-gray-700 break-words mb-2">
                                 {comment.content}
                             </p>
+
+                            {/* 回复按钮 */}
+                            <button
+                                onClick={() => onReply(comment.id, comment.author.username)}
+                                className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-blue-500 transition-colors"
+                            >
+                                <Reply className="w-3.5 h-3.5" />
+                                <span>回复</span>
+                            </button>
 
                             {/* 回复列表 */}
                             {comment.replies && comment.replies.length > 0 && (
@@ -109,9 +119,17 @@ export const PostCommentShow = ({ postId }: PostCommentShowProps) => {
                                                         {formatTime(reply.createdAt)}
                                                     </span>
                                                 </div>
-                                                <p className="text-xs text-gray-700 break-words">
+                                                <p className="text-xs text-gray-700 break-words mb-1">
                                                     {reply.content}
                                                 </p>
+                                                {/* 回复的回复按钮 */}
+                                                <button
+                                                    onClick={() => onReply(comment.id, reply.author.username)}
+                                                    className="inline-flex items-center gap-1 text-[10px] text-gray-400 hover:text-blue-500 transition-colors"
+                                                >
+                                                    <Reply className="w-3 h-3" />
+                                                    <span>回复</span>
+                                                </button>
                                             </div>
                                         </div>
                                     ))}
