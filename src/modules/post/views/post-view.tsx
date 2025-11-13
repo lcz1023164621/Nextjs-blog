@@ -6,6 +6,7 @@ import { PostTitle } from "../components/post-title"
 import { useEffect, useState } from "react"
 import { PostContent } from "../components/post-content"
 import { PostComment } from "../components/post-comment"
+import { PostCommentShow } from "../components/post-comment-show"
 
 export const PostView = ({ post }: { post: Post }) => {
 
@@ -26,15 +27,22 @@ export const PostView = ({ post }: { post: Post }) => {
             </div>
             
             {/* 右侧：信息栏 - 固定宽度 */}
-            <div className="w-96 bg-white flex flex-col h-screen overflow-y-auto pb-28">
+            <div className="w-96 bg-white flex flex-col h-screen">
                 {/* 固定在navbar下方的标题 */}
                 <div className="fixed top-[73px] right-0 w-96 bg-white border-b border-gray-200 z-40">
                     <PostTitle post={post} />
                 </div>
                 
-                {/* 内容区域 - 添加上边距避免被标题遮挡 */}
-                <div className="mt-[170px]">
+                {/* 可滚动的内容区域 */}
+                <div className="flex-1 overflow-y-auto mt-[170px] pb-28">
+                    {/* 文章内容 */}
                     <PostContent post={post} />
+                    
+                    {/* 评论列表 */}
+                    <div className="px-4 py-4">
+                        <h3 className="text-sm font-semibold text-gray-900 mb-4">评论</h3>
+                        <PostCommentShow postId={post.id} />
+                    </div>
                 </div>
                
                 
