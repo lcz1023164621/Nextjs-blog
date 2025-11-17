@@ -15,9 +15,23 @@ interface PostCommentProps {
     postId: string;
     replyTo: ReplyTo | null;
     onCancelReply: () => void;
+    likesCount: number;
+    favoritesCount: number;
+    commentsCount: number;
+    isLiked: boolean;
+    isFavorited: boolean;
 }
 
-export const PostComment = ({ postId, replyTo, onCancelReply }: PostCommentProps) => {
+export const PostComment = ({ 
+    postId, 
+    replyTo, 
+    onCancelReply, 
+    likesCount, 
+    favoritesCount, 
+    commentsCount,
+    isLiked,
+    isFavorited 
+}: PostCommentProps) => {
     const [comment, setComment] = useState("")
     const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -139,21 +153,25 @@ export const PostComment = ({ postId, replyTo, onCancelReply }: PostCommentProps
             {/* 互动按钮区域 */}
             <div className="flex items-center gap-6 text-gray-500">
                 {/* 点赞 */}
-                <button className="flex items-center gap-1.5 hover:text-red-500 transition-colors">
-                    <Heart className="w-5 h-5" />
-                    <span className="text-sm">28</span>
+                <button className={`flex items-center gap-1.5 transition-colors ${
+                    isLiked ? 'text-red-500' : 'hover:text-red-500'
+                }`}>
+                    <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
+                    <span className="text-sm">{likesCount}</span>
                 </button>
 
                 {/* 收藏 */}
-                <button className="flex items-center gap-1.5 hover:text-yellow-500 transition-colors">
-                    <Star className="w-5 h-5" />
-                    <span className="text-sm">10</span>
+                <button className={`flex items-center gap-1.5 transition-colors ${
+                    isFavorited ? 'text-yellow-500' : 'hover:text-yellow-500'
+                }`}>
+                    <Star className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} />
+                    <span className="text-sm">{favoritesCount}</span>
                 </button>
 
                 {/* 评论 */}
                 <button className="flex items-center gap-1.5 hover:text-blue-500 transition-colors">
                     <MessageCircle className="w-5 h-5" />
-                    <span className="text-sm">40</span>
+                    <span className="text-sm">{commentsCount}</span>
                 </button>
 
                 {/* 分享 */}

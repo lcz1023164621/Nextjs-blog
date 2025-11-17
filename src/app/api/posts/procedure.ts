@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { protectedProcedure, createTRPCRouter, baseProcedure } from '@/trpc/init';
 import { db } from '@/db';
-import { posts, users, postImages, postLikes, postFavorites } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { posts, users, postImages, postLikes, postFavorites, comments } from '@/db/schema';
+import { eq, and, sql } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
@@ -186,7 +186,7 @@ export const postRouter = createTRPCRouter({
           });
         }
 
-        // 为每篇文章添加点赞和收藏状态
+        // 为每篇文章添加点赞、收藏状态和统计数据
         const postsWithStatus = await Promise.all(
           postList.map(async (post) => {
             let isLiked = false;
@@ -212,10 +212,18 @@ export const postRouter = createTRPCRouter({
               isFavorited = !!favoriteRecord;
             }
 
+            // 统计评论数（包括所有层级的评论）
+            const commentsCountResult = await db
+              .select({ count: sql<number>`count(*)` })
+              .from(comments)
+              .where(eq(comments.postId, post.id));
+            const commentsCount = Number(commentsCountResult[0]?.count || 0);
+
             return {
               ...post,
               isLiked,
               isFavorited,
+              commentsCount,
             };
           })
         );
@@ -240,8 +248,9 @@ export const postRouter = createTRPCRouter({
             { id: z.string() }
         )
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const { id } = input;
+      const clerkId = ctx.userId; // 获取当前登录用户的 clerkId（可能为 null）
 
       try{
         const post = await db.query.posts.findFirst({
@@ -270,7 +279,68 @@ export const postRouter = createTRPCRouter({
           });
         }
 
-        return { success: true, post };
+        // 统计点赞数
+        const likesCountResult = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(postLikes)
+          .where(eq(postLikes.postId, id));
+        const likesCount = Number(likesCountResult[0]?.count || 0);
+
+        // 统计收藏数
+        const favoritesCountResult = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(postFavorites)
+          .where(eq(postFavorites.postId, id));
+        const favoritesCount = Number(favoritesCountResult[0]?.count || 0);
+
+        // 统计评论数（包括所有层级的评论）
+        const commentsCountResult = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(comments)
+          .where(eq(comments.postId, id));
+        const commentsCount = Number(commentsCountResult[0]?.count || 0);
+
+        // 如果用户已登录，查询点赞和收藏状态
+        let isLiked = false;
+        let isFavorited = false;
+        
+        if (clerkId) {
+          const currentUser = await db.query.users.findFirst({
+            where: eq(users.clerkId, clerkId),
+          });
+
+          if (currentUser) {
+            // 查询是否点赞
+            const likeRecord = await db.query.postLikes.findFirst({
+              where: and(
+                eq(postLikes.postId, id),
+                eq(postLikes.userId, currentUser.id)
+              ),
+            });
+            isLiked = !!likeRecord;
+
+            // 查询是否收藏
+            const favoriteRecord = await db.query.postFavorites.findFirst({
+              where: and(
+                eq(postFavorites.postId, id),
+                eq(postFavorites.userId, currentUser.id)
+              ),
+            });
+            isFavorited = !!favoriteRecord;
+          }
+        }
+
+        return { 
+          success: true, 
+          post: {
+            ...post,
+            likesCount,
+            favoritesCount,
+            commentsCount,
+            isLiked,
+            isFavorited,
+          }
+        };
       }
       catch(error){
         console.error('获取文章失败:', error);

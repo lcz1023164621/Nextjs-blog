@@ -14,4 +14,9 @@ export type Post = {
     id: string;
     imageUrl: string;
   }[];
+  likesCount?: number;
+  favoritesCount?: number;
+  commentsCount?: number;
+  isLiked?: boolean;
+  isFavorited?: boolean;
 };

@@ -14,6 +14,7 @@ type Post = {
     content: string
     isLiked: boolean
     isFavorited: boolean
+    commentsCount: number
     author: {
         id: string
         username: string
@@ -172,7 +173,7 @@ export const HomeContent = () => {
                         name: post.author.username,
                     }}
                     stats={{
-                        comments: 0,
+                        comments: post.commentsCount,
                         isFavorited: post.isFavorited,
                         isLiked: post.isLiked,
                     }}

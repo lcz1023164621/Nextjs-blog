@@ -64,6 +64,11 @@ export const PostView = ({ post }: { post: Post }) => {
                         postId={post.id} 
                         replyTo={replyTo}
                         onCancelReply={handleCancelReply}
+                        likesCount={post.likesCount || 0}
+                        favoritesCount={post.favoritesCount || 0}
+                        commentsCount={post.commentsCount || 0}
+                        isLiked={post.isLiked || false}
+                        isFavorited={post.isFavorited || false}
                     />
                 </div>
             </div>
