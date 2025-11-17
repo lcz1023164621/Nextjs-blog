@@ -1,12 +1,98 @@
 import { z } from 'zod';
 import { protectedProcedure, createTRPCRouter } from '@/trpc/init';
 import { db } from '@/db';
-import { postLikes, users, posts } from '@/db/schema';
+import { postFavorites, users, posts } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 
 export const favoritesRouter = createTRPCRouter({
-  // 点赞文章 - 受保护的路由
+  // 切换收藏状态（智能收藏/取消收藏）- 受保护的路由
+  toggleFavorite: protectedProcedure
+    .input(
+      z.object({
+        postId: z.string().uuid('无效的文章ID'),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { postId } = input;
+      const clerkId = ctx.userId;
+
+      try {
+        // 通过 clerkId 查找数据库中的用户
+        const user = await db.query.users.findFirst({
+          where: eq(users.clerkId, clerkId),
+        });
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '用户不存在，请先完成用户同步',
+          });
+        }
+
+        // 验证文章是否存在
+        const post = await db.query.posts.findFirst({
+          where: eq(posts.id, postId),
+        });
+
+        if (!post) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '文章不存在',
+          });
+        }
+
+        // 检查是否已经收藏
+        const existingFavorite = await db.query.postFavorites.findFirst({
+          where: and(
+            eq(postFavorites.postId, postId),
+            eq(postFavorites.userId, user.id)
+          ),
+        });
+
+        if (existingFavorite) {
+          // 已收藏，执行取消收藏
+          await db.delete(postFavorites).where(
+            and(
+              eq(postFavorites.postId, postId),
+              eq(postFavorites.userId, user.id)
+            )
+          );
+
+          return {
+            success: true,
+            isFavorited: false,
+            message: '取消收藏成功',
+          };
+        } else {
+          // 未收藏，执行收藏
+          await db.insert(postFavorites)
+            .values({
+              postId,
+              userId: user.id,
+            });
+
+          return {
+            success: true,
+            isFavorited: true,
+            message: '收藏成功',
+          };
+        }
+      } catch (error) {
+        console.error('切换收藏状态失败:', error);
+        
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '操作失败，请稍后重试',
+        });
+      }
+    }),
+
+  // 收藏文章 - 受保护的路由
   favouritesPost: protectedProcedure
     .input(
       z.object({
@@ -43,22 +129,22 @@ export const favoritesRouter = createTRPCRouter({
         }
 
         // 检查是否已经收藏
-        const existingLike = await db.query.postLikes.findFirst({
+        const existingFavorite = await db.query.postFavorites.findFirst({
           where: and(
-            eq(postLikes.postId, postId),
-            eq(postLikes.userId, user.id)
+            eq(postFavorites.postId, postId),
+            eq(postFavorites.userId, user.id)
           ),
         });
 
-        if (existingLike) {
+        if (existingFavorite) {
           throw new TRPCError({
             code: 'BAD_REQUEST',
             message: '您已经收藏过此文章',
           });
         }
 
-        // 添加点赞记录
-        const newLike = await db.insert(postLikes)
+        // 添加收藏记录
+        const newFavorite = await db.insert(postFavorites)
           .values({
             postId,
             userId: user.id,
@@ -67,7 +153,7 @@ export const favoritesRouter = createTRPCRouter({
 
         return {
           success: true,
-          like: newLike[0],
+          favorite: newFavorite[0],
           message: '收藏成功',
         };
       } catch (error) {
@@ -108,26 +194,26 @@ export const favoritesRouter = createTRPCRouter({
           });
         }
 
-        // 查找点赞记录
-        const existingLike = await db.query.postLikes.findFirst({
+        // 查找收藏记录
+        const existingFavorite = await db.query.postFavorites.findFirst({
           where: and(
-            eq(postLikes.postId, postId),
-            eq(postLikes.userId, user.id)
+            eq(postFavorites.postId, postId),
+            eq(postFavorites.userId, user.id)
           ),
         });
 
-        if (!existingLike) {
+        if (!existingFavorite) {
           throw new TRPCError({
             code: 'NOT_FOUND',
             message: '您还未收藏此文章',
           });
         }
 
-        // 删除点赞记录
-        await db.delete(postLikes).where(
+        // 删除收藏记录
+        await db.delete(postFavorites).where(
           and(
-            eq(postLikes.postId, postId),
-            eq(postLikes.userId, user.id)
+            eq(postFavorites.postId, postId),
+            eq(postFavorites.userId, user.id)
           )
         );
 
@@ -149,8 +235,8 @@ export const favoritesRouter = createTRPCRouter({
       }
     }),
 
-  // 获取用户所有点赞的文章 - 受保护的路由
-  getLikedPosts: protectedProcedure
+  // 获取用户所有收藏的文章 - 受保护的路由
+  getFavoritedPosts: protectedProcedure
     .input(
       z.object({
         limit: z.number().min(1).max(100).default(20),
@@ -174,12 +260,12 @@ export const favoritesRouter = createTRPCRouter({
           });
         }
 
-        // 查询用户的点赞记录，包含文章信息
-        const likedPosts = await db.query.postLikes.findMany({
-          where: eq(postLikes.userId, user.id),
+        // 查询用户的收藏记录，包含文章信息
+        const favoritedPosts = await db.query.postFavorites.findMany({
+          where: eq(postFavorites.userId, user.id),
           limit,
           offset,
-          orderBy: (postLikes, { desc }) => [desc(postLikes.createdAt)],
+          orderBy: (postFavorites, { desc }) => [desc(postFavorites.createdAt)],
           with: {
             post: {
               with: {
@@ -203,9 +289,9 @@ export const favoritesRouter = createTRPCRouter({
 
         return {
           success: true,
-          likedPosts: likedPosts.map(like => ({
-            ...like.post,
-            likedAt: like.createdAt, // 添加点赞时间
+          favoritedPosts: favoritedPosts.map(favorite => ({
+            ...favorite.post,
+            favoritedAt: favorite.createdAt, // 添加收藏时间
           })),
         };
       } catch (error) {
@@ -224,4 +310,4 @@ export const favoritesRouter = createTRPCRouter({
 });
 
 // 导出类型
-export type favoritesRouter = typeof favoritesRouter;
+export type FavoritesRouter = typeof favoritesRouter;

@@ -12,6 +12,8 @@ type Post = {
     id: string
     title: string
     content: string
+    isLiked: boolean
+    isFavorited: boolean
     author: {
         id: string
         username: string
@@ -21,7 +23,6 @@ type Post = {
         id: string
         imageUrl: string
     }[]
-
 }
 
 export const HomeContent = () => {
@@ -52,15 +53,36 @@ export const HomeContent = () => {
             } else {
                 // 分页加载，累加数据并去重
                 setAllPosts(prev => {
-                    const newPosts = data.posts.filter(
-                        newPost => !prev.some(existingPost => existingPost.id === newPost.id)
-                    )
+                    const newPosts = data.posts
+                        .filter(newPost => !prev.some(existingPost => existingPost.id === newPost.id))
                     return [...prev, ...newPosts]
                 })
                 setHasMore(data.posts.length >= PAGE_SIZE)
             }
         }
     }, [data, offset])
+
+    // 处理点赞状态变化
+    const handleLikeChange = useCallback((postId: string, isLiked: boolean) => {
+        setAllPosts(prev => 
+            prev.map(post => 
+                post.id === postId 
+                    ? { ...post, isLiked } 
+                    : post
+            )
+        )
+    }, [])
+
+    // 处理收藏状态变化
+    const handleFavoriteChange = useCallback((postId: string, isFavorited: boolean) => {
+        setAllPosts(prev => 
+            prev.map(post => 
+                post.id === postId 
+                    ? { ...post, isFavorited } 
+                    : post
+            )
+        )
+    }, [])
 
     // Intersection Observer 回调
     const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
@@ -142,7 +164,7 @@ export const HomeContent = () => {
             {allPosts.map((post) => (
                 <HomeContentCard 
                     key={post.id}
-                    id = {post.id}
+                    id={post.id}
                     title={post.title}
                     content={post.content}
                     thumbnail={post.images[0]?.imageUrl || post.author.avatar || undefined}
@@ -150,13 +172,12 @@ export const HomeContent = () => {
                         name: post.author.username,
                     }}
                     stats={{
-                        agrees: 0,
                         comments: 0,
-                        isAgreed: false,
-                        isFavorited: false,
-                        isLiked: false,
+                        isFavorited: post.isFavorited,
+                        isLiked: post.isLiked,
                     }}
-                    
+                    onLikeChange={(isLiked) => handleLikeChange(post.id, isLiked)}
+                    onFavoriteChange={(isFavorited) => handleFavoriteChange(post.id, isFavorited)}
                 />
             ))}
 

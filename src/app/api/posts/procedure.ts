@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { protectedProcedure, createTRPCRouter, baseProcedure } from '@/trpc/init';
 import { db } from '@/db';
-import { posts, users, postImages } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { posts, users, postImages, postLikes, postFavorites } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
@@ -151,8 +151,9 @@ export const postRouter = createTRPCRouter({
         offset: z.number().min(0).default(0), //分页偏移
       }).optional()
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const { limit = 10, offset = 0 } = input || {};
+      const clerkId = ctx.userId; // 获取当前登录用户的 clerkId（可能为 null）
 
       try {
         // 查询文章，包含作者和图片信息
@@ -177,9 +178,51 @@ export const postRouter = createTRPCRouter({
           },
         });
 
+        // 如果用户已登录，查询点赞和收藏状态
+        let currentUser = null;
+        if (clerkId) {
+          currentUser = await db.query.users.findFirst({
+            where: eq(users.clerkId, clerkId),
+          });
+        }
+
+        // 为每篇文章添加点赞和收藏状态
+        const postsWithStatus = await Promise.all(
+          postList.map(async (post) => {
+            let isLiked = false;
+            let isFavorited = false;
+
+            if (currentUser) {
+              // 查询是否点赞
+              const likeRecord = await db.query.postLikes.findFirst({
+                where: and(
+                  eq(postLikes.postId, post.id),
+                  eq(postLikes.userId, currentUser.id)
+                ),
+              });
+              isLiked = !!likeRecord;
+
+              // 查询是否收藏
+              const favoriteRecord = await db.query.postFavorites.findFirst({
+                where: and(
+                  eq(postFavorites.postId, post.id),
+                  eq(postFavorites.userId, currentUser.id)
+                ),
+              });
+              isFavorited = !!favoriteRecord;
+            }
+
+            return {
+              ...post,
+              isLiked,
+              isFavorited,
+            };
+          })
+        );
+
         return {
           success: true,
-          posts: postList,
+          posts: postsWithStatus,
         };
       } catch (error) {
         console.error('获取文章列表失败:', error);

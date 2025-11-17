@@ -6,6 +6,92 @@ import { eq, and } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 
 export const likeRouter = createTRPCRouter({
+  // 切换点赞状态（智能点赞/取消点赞）- 受保护的路由
+  toggleLike: protectedProcedure
+    .input(
+      z.object({
+        postId: z.string().uuid('无效的文章ID'),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { postId } = input;
+      const clerkId = ctx.userId;
+
+      try {
+        // 通过 clerkId 查找数据库中的用户
+        const user = await db.query.users.findFirst({
+          where: eq(users.clerkId, clerkId),
+        });
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '用户不存在，请先完成用户同步',
+          });
+        }
+
+        // 验证文章是否存在
+        const post = await db.query.posts.findFirst({
+          where: eq(posts.id, postId),
+        });
+
+        if (!post) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '文章不存在',
+          });
+        }
+
+        // 检查是否已经点赞
+        const existingLike = await db.query.postLikes.findFirst({
+          where: and(
+            eq(postLikes.postId, postId),
+            eq(postLikes.userId, user.id)
+          ),
+        });
+
+        if (existingLike) {
+          // 已点赞，执行取消点赞
+          await db.delete(postLikes).where(
+            and(
+              eq(postLikes.postId, postId),
+              eq(postLikes.userId, user.id)
+            )
+          );
+
+          return {
+            success: true,
+            isLiked: false,
+            message: '取消点赞成功',
+          };
+        } else {
+          // 未点赞，执行点赞
+          await db.insert(postLikes)
+            .values({
+              postId,
+              userId: user.id,
+            });
+
+          return {
+            success: true,
+            isLiked: true,
+            message: '点赞成功',
+          };
+        }
+      } catch (error) {
+        console.error('切换点赞状态失败:', error);
+        
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '操作失败，请稍后重试',
+        });
+      }
+    }),
+
   // 点赞文章 - 受保护的路由
   likePost: protectedProcedure
     .input(

@@ -1,8 +1,12 @@
-import { ThumbsUp, MessageSquare, Share2, Bookmark, Heart, MoreHorizontal } from 'lucide-react';
+'use client';
+
+import { MessageSquare, Share2, MoreHorizontal } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
+import { LikesButton } from '@/modules/likes/components/likes-button';
+import { FavouritesButton } from '@/modules/favourites/component/favourites-button';
 
 interface TextContentCardProps {
   id: string;
@@ -13,21 +17,25 @@ interface TextContentCardProps {
     name: string;
   };
   stats: {
-    agrees: number;
     comments: number;
-    isAgreed?: boolean;
     isFavorited?: boolean;
     isLiked?: boolean;
   };
+  onLikeChange?: (isLiked: boolean) => void;
+  onFavoriteChange?: (isFavorited: boolean) => void;
 }
+
+export type { TextContentCardProps };
 
 export const HomeContentCard = ({ 
   title, 
   content, 
   thumbnail,
   author,
-  stats ,
+  stats,
   id,
+  onLikeChange,
+  onFavoriteChange,
 }: TextContentCardProps) => {
   return (
 
@@ -79,26 +87,12 @@ export const HomeContentCard = ({
 
       {/* 底部互动栏 */}
       <div className="flex items-center gap-5 mt-4 text-[13px] text-gray-500">
-        {/* 赞同 */}
-        <Button 
-          variant="ghost" 
-          size="sm"
-          className={`gap-1.5 h-7 px-2.5 -ml-2.5 hover:bg-blue-50 ${
-            stats.isAgreed ? 'text-blue-600 bg-blue-50' : 'text-gray-600'
-          }`}
-        >
-          <ThumbsUp className={`w-[14px] h-[14px] ${stats.isAgreed ? 'fill-current' : ''}`} />
-          赞同 {stats.agrees}
-        </Button>
-
-        {/* 踩 */}
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="gap-1.5 h-7 px-2.5 hover:bg-gray-50 text-gray-600"
-        >
-          <ThumbsUp className="w-[14px] h-[14px] rotate-180" />
-        </Button>
+        {/* 喜欢 */}
+        <LikesButton 
+          postId={id} 
+          initialIsLiked={stats.isLiked || false} 
+          onLikeChange={onLikeChange} 
+        />
 
         {/* 评论 */}
         <Button 
@@ -121,28 +115,11 @@ export const HomeContentCard = ({
         </Button>
 
         {/* 收藏 */}
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className={`gap-1.5 h-7 px-2.5 hover:bg-gray-50 ${
-            stats.isFavorited ? 'text-yellow-600' : 'text-gray-600'
-          }`}
-        >
-          <Bookmark className={`w-[14px] h-[14px] ${stats.isFavorited ? 'fill-current' : ''}`} />
-          收藏
-        </Button>
-
-        {/* 喜欢 */}
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className={`gap-1.5 h-7 px-2.5 hover:bg-gray-50 ${
-            stats.isLiked ? 'text-red-500' : 'text-gray-600'
-          }`}
-        >
-          <Heart className={`w-[14px] h-[14px] ${stats.isLiked ? 'fill-current' : ''}`} />
-          喜欢
-        </Button>
+        <FavouritesButton 
+          postId={id} 
+          initialIsFavorited={stats.isFavorited || false} 
+          onFavoriteChange={onFavoriteChange} 
+        />
 
         <span className="font-medium text-gray-900">作者：{author.name}</span>{' '}
 
