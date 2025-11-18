@@ -9,10 +9,11 @@ import { useState, useEffect } from 'react';
 interface LikesButtonProps {
   postId: string;
   initialIsLiked: boolean;
+  likesCount?: number;
   onLikeChange?: (isLiked: boolean) => void;
 }
 
-export const LikesButton = ({ postId, initialIsLiked, onLikeChange }: LikesButtonProps) => {
+export const LikesButton = ({ postId, initialIsLiked, likesCount, onLikeChange }: LikesButtonProps) => {
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const utils = trpc.useUtils();
 
@@ -68,7 +69,7 @@ export const LikesButton = ({ postId, initialIsLiked, onLikeChange }: LikesButto
       <Heart className={`w-[14px] h-[14px] transition-all ${
         isLiked ? 'fill-current scale-110' : ''
       }`} />
-      喜欢
+      {likesCount !== undefined ? `${likesCount === 0 ? '' : likesCount}` : ''}
     </Button>
   );
 };

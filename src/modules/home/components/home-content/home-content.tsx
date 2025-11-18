@@ -15,6 +15,8 @@ type Post = {
     isLiked: boolean
     isFavorited: boolean
     commentsCount: number
+    likesCount?: number
+    favoritesCount?: number
     author: {
         id: string
         username: string
@@ -176,6 +178,8 @@ export const HomeContent = () => {
                         comments: post.commentsCount,
                         isFavorited: post.isFavorited,
                         isLiked: post.isLiked,
+                        likesCount: post.likesCount,
+                        favoritesCount: post.favoritesCount,
                     }}
                     onLikeChange={(isLiked) => handleLikeChange(post.id, isLiked)}
                     onFavoriteChange={(isFavorited) => handleFavoriteChange(post.id, isFavorited)}

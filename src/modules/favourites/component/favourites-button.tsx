@@ -9,10 +9,11 @@ import { useState, useEffect } from 'react';
 interface FavouritesButtonProps {
   postId: string;
   initialIsFavorited: boolean;
+  favoritesCount?: number;
   onFavoriteChange?: (isFavorited: boolean) => void;
 }
 
-export const FavouritesButton = ({ postId, initialIsFavorited, onFavoriteChange }: FavouritesButtonProps) => {
+export const FavouritesButton = ({ postId, initialIsFavorited, favoritesCount, onFavoriteChange }: FavouritesButtonProps) => {
   const [isFavorited, setIsFavorited] = useState(initialIsFavorited);
   const utils = trpc.useUtils();
 
@@ -68,7 +69,7 @@ export const FavouritesButton = ({ postId, initialIsFavorited, onFavoriteChange 
       <Bookmark className={`w-[14px] h-[14px] transition-all ${
         isFavorited ? 'fill-current' : ''
       }`} />
-      收藏
+      {favoritesCount !== undefined ? `${favoritesCount === 0 ? '' : favoritesCount}` : ''} 收藏
     </Button>
   );
 };

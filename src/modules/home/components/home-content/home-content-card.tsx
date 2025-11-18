@@ -20,6 +20,8 @@ interface TextContentCardProps {
     comments: number;
     isFavorited?: boolean;
     isLiked?: boolean;
+    likesCount?: number;
+    favoritesCount?: number;
   };
   onLikeChange?: (isLiked: boolean) => void;
   onFavoriteChange?: (isFavorited: boolean) => void;
@@ -90,7 +92,8 @@ export const HomeContentCard = ({
         {/* 喜欢 */}
         <LikesButton 
           postId={id} 
-          initialIsLiked={stats.isLiked || false} 
+          initialIsLiked={stats.isLiked || false}
+          likesCount={stats.likesCount}
           onLikeChange={onLikeChange} 
         />
 
@@ -117,17 +120,18 @@ export const HomeContentCard = ({
         {/* 收藏 */}
         <FavouritesButton 
           postId={id} 
-          initialIsFavorited={stats.isFavorited || false} 
+          initialIsFavorited={stats.isFavorited || false}
+          favoritesCount={stats.favoritesCount}
           onFavoriteChange={onFavoriteChange} 
         />
 
-        <span className="font-medium text-gray-900">作者：{author.name}</span>{' '}
+        <span className="font-medium text-gray-900 ml-auto">作者：{author.name}</span>
 
         {/* 更多 */}
         <Button 
           variant="ghost" 
           size="sm" 
-          className="h-7 w-7 p-0 ml-auto hover:bg-gray-50 text-gray-600"
+          className="h-7 w-7 p-0 hover:bg-gray-50 text-gray-600"
         >
           <MoreHorizontal className="w-[14px] h-[14px]" />
         </Button>

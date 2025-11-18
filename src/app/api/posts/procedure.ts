@@ -212,6 +212,20 @@ export const postRouter = createTRPCRouter({
               isFavorited = !!favoriteRecord;
             }
 
+            // 统计点赞数
+            const likesCountResult = await db
+              .select({ count: sql<number>`count(*)` })
+              .from(postLikes)
+              .where(eq(postLikes.postId, post.id));
+            const likesCount = Number(likesCountResult[0]?.count || 0);
+
+            // 统计收藏数
+            const favoritesCountResult = await db
+              .select({ count: sql<number>`count(*)` })
+              .from(postFavorites)
+              .where(eq(postFavorites.postId, post.id));
+            const favoritesCount = Number(favoritesCountResult[0]?.count || 0);
+
             // 统计评论数（包括所有层级的评论）
             const commentsCountResult = await db
               .select({ count: sql<number>`count(*)` })
@@ -223,6 +237,8 @@ export const postRouter = createTRPCRouter({
               ...post,
               isLiked,
               isFavorited,
+              likesCount,
+              favoritesCount,
               commentsCount,
             };
           })
@@ -352,6 +368,73 @@ export const postRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: '获取文章失败',
+        });
+      }
+    }),
+
+  // 获取文章的点赞和收藏总数 - 公开路由
+  getPostStats: baseProcedure
+    .input(
+      z.object({
+        postId: z.string().uuid('无效的文章ID'),
+      })
+    )
+    .query(async ({ input }) => {
+      const { postId } = input;
+
+      try {
+        // 验证文章是否存在
+        const post = await db.query.posts.findFirst({
+          where: eq(posts.id, postId),
+        });
+
+        if (!post) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '文章不存在',
+          });
+        }
+
+        // 统计点赞数
+        const likesCountResult = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(postLikes)
+          .where(eq(postLikes.postId, postId));
+        const likesCount = Number(likesCountResult[0]?.count || 0);
+
+        // 统计收藏数
+        const favoritesCountResult = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(postFavorites)
+          .where(eq(postFavorites.postId, postId));
+        const favoritesCount = Number(favoritesCountResult[0]?.count || 0);
+
+        // 统计评论数
+        const commentsCountResult = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(comments)
+          .where(eq(comments.postId, postId));
+        const commentsCount = Number(commentsCountResult[0]?.count || 0);
+
+        return {
+          success: true,
+          stats: {
+            likesCount,
+            favoritesCount,
+            commentsCount,
+            totalInteractions: likesCount + favoritesCount, // 总互动数（点赞+收藏）
+          },
+        };
+      } catch (error) {
+        console.error('获取文章统计信息失败:', error);
+        
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '获取文章统计信息失败',
         });
       }
     })
