@@ -1,4 +1,5 @@
 import { PersonNavbar } from "../../components/navbar/person-navbar";
+import { PersonalInformation } from "../../components/personal-information/personal-information";
 import { PersonShow } from "../../components/showperson/person-show";
 
 export const PersonShowView = () => {
@@ -6,8 +7,10 @@ export const PersonShowView = () => {
 
   return (
     <div className="max-w-3xl mx-auto px-4">
+        <PersonalInformation />
         <PersonNavbar />
         <div className="py-8">
+            
             <PersonShow />
         </div>
     </div>
