@@ -8,8 +8,10 @@ import {NavigationMenu,
   navigationMenuTriggerStyle, } from "@/components/ui/navigation-menu";
 import { HomeSearchbar } from "../home-searchbar/home-searchbar";
 import { AuthButton } from "@/modules/auth/components/authbutton";
+import { useUser } from "@clerk/nextjs";
 
 export const HomeNavbar = () => {
+    const { user } = useUser();
 
     return(
         <nav className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -26,9 +28,9 @@ export const HomeNavbar = () => {
                         </NavigationMenuItem>
 
                         <NavigationMenuItem>
-                            <Link href="/person" legacyBehavior passHref>
+                            <Link href={user?.id ? `/person/${user.id}` : "/sign-in"} legacyBehavior passHref>
                                 <NavigationMenuLink className={navigationMenuTriggerStyle() + " text-sm md:text-base"}>
-                                    个人
+                                    我
                                 </NavigationMenuLink>
                             </Link>
                         </NavigationMenuItem>

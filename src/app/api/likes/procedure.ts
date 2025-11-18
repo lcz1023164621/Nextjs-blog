@@ -282,6 +282,7 @@ export const likeRouter = createTRPCRouter({
                     imageUrl: true,
                   },
                 },
+                likes: true, // 获取所有点赞记录用于统计
               },
             },
           },
@@ -291,6 +292,7 @@ export const likeRouter = createTRPCRouter({
           success: true,
           likedPosts: likedPosts.map(like => ({
             ...like.post,
+            likesCount: like.post.likes.length, // 添加点赞数统计
             likedAt: like.createdAt, // 添加点赞时间
           })),
         };
