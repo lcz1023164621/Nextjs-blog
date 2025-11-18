@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { protectedProcedure, createTRPCRouter } from '@/trpc/init';
 import { db } from '@/db';
-import { postFavorites, users, posts } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { postFavorites, users, posts, postLikes } from '@/db/schema';
+import { eq, and, sql } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 
 export const favoritesRouter = createTRPCRouter({
@@ -287,12 +287,37 @@ export const favoritesRouter = createTRPCRouter({
           },
         });
 
+        // 为每篇文章添加统计数据
+        const postsWithStats = await Promise.all(
+          favoritedPosts.map(async (favorite) => {
+            const post = favorite.post;
+
+            // 统计点赞数
+            const likesCountResult = await db
+              .select({ count: sql<number>`count(*)` })
+              .from(postLikes)
+              .where(eq(postLikes.postId, post.id));
+            const likesCount = Number(likesCountResult[0]?.count || 0);
+
+            // 统计收藏数
+            const favoritesCountResult = await db
+              .select({ count: sql<number>`count(*)` })
+              .from(postFavorites)
+              .where(eq(postFavorites.postId, post.id));
+            const favoritesCount = Number(favoritesCountResult[0]?.count || 0);
+
+            return {
+              ...post,
+              likesCount,
+              favoritesCount,
+              favoritedAt: favorite.createdAt, // 添加收藏时间
+            };
+          })
+        );
+
         return {
           success: true,
-          favoritedPosts: favoritedPosts.map(favorite => ({
-            ...favorite.post,
-            favoritedAt: favorite.createdAt, // 添加收藏时间
-          })),
+          favoritedPosts: postsWithStats,
         };
       } catch (error) {
         console.error('获取收藏文章列表失败:', error);

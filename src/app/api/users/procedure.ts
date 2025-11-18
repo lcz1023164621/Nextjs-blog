@@ -1,8 +1,9 @@
 import { z } from 'zod';
-import { baseProcedure, createTRPCRouter } from '@/trpc/init';
+import { baseProcedure, createTRPCRouter, protectedProcedure } from '@/trpc/init';
 import { db } from '@/db';
-import { users } from '@/db/schema';
+import { users, posts } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { TRPCError } from '@trpc/server';
 
 export const userRouter = createTRPCRouter({
   syncUser: baseProcedure
@@ -60,6 +61,76 @@ export const userRouter = createTRPCRouter({
       } catch (error) {
         console.error('Error syncing user:', error);
         throw new Error('Failed to sync user');
+      }
+    }),
+
+  // 获取当前用户发表的文章 - 受保护的路由
+  getUserPosts: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(20),
+        offset: z.number().min(0).default(0),
+      }).optional()
+    )
+    .query(async ({ ctx, input }) => {
+      const { limit = 20, offset = 0 } = input || {};
+      const clerkId = ctx.userId;
+
+      try {
+        // 通过 clerkId 查找数据库中的用户
+        const user = await db.query.users.findFirst({
+          where: eq(users.clerkId, clerkId),
+        });
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '用户不存在',
+          });
+        }
+
+        // 查询用户发表的文章
+        const userPosts = await db.query.posts.findMany({
+          where: eq(posts.authorId, user.id),
+          limit,
+          offset,
+          orderBy: (posts, { desc }) => [desc(posts.createdAt)],
+          with: {
+            author: {
+              columns: {
+                id: true,
+                username: true,
+                avatar: true,
+              },
+            },
+            images: {
+              columns: {
+                id: true,
+                imageUrl: true,
+              },
+            },
+            likes: true, // 获取所有点赞记录用于统计
+          },
+        });
+
+        return {
+          success: true,
+          posts: userPosts.map(post => ({
+            ...post,
+            likesCount: post.likes.length, // 添加点赞数统计
+          })),
+        };
+      } catch (error) {
+        console.error('获取用户文章列表失败:', error);
+        
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '获取用户文章列表失败',
+        });
       }
     }),
 });

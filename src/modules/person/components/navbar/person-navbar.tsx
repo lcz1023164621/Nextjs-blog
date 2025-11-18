@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { BookMarked, Star, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 
 type TabType = 'notes' | 'favorites' | 'likes';
@@ -14,15 +13,25 @@ interface PersonNavbarProps {
 }
 
 export const PersonNavbar = ({ 
-  activeTab = 'notes',
+  activeTab,
   onTabChange 
 }: PersonNavbarProps) => {
-  const [currentTab, setCurrentTab] = useState<TabType>(activeTab);
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useUser();
+  
+  // 根据当前路径判断激活的标签页
+  const getCurrentTab = (): TabType => {
+    if (activeTab) return activeTab;
+    
+    if (pathname.includes('/likes')) return 'likes';
+    if (pathname.includes('/favourites')) return 'favorites';
+    return 'notes';
+  };
+  
+  const currentTab = getCurrentTab();
 
   const handleTabClick = (tab: TabType) => {
-    setCurrentTab(tab);
     onTabChange?.(tab);
     
     // 根据不同的标签页导航到对应路由
@@ -32,7 +41,7 @@ export const PersonNavbar = ({
           router.push(`/person/${user.id}`);
           break;
         case 'favorites':
-          router.push(`/person/${user.id}/favorites`);
+          router.push(`/person/${user.id}/favourites`);
           break;
         case 'likes':
           router.push(`/person/${user.id}/likes`);

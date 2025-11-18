@@ -1,12 +1,12 @@
 'use client';
 
 import { trpc } from '@/trpc/client';
-import { PersonShowFavouriteCard } from './person-showfavourite-card';
+import { PersonShowCard } from './person-show-card';
 import { Loader2 } from 'lucide-react';
 
-export const PersonShowFavourites = () => {
-  // 从后端获取用户收藏的文章列表
-  const { data, isLoading, error } = trpc.favorites.getFavoritedPosts.useQuery({
+export const PersonShow = () => {
+  // 从后端获取当前用户发表的文章列表
+  const { data, isLoading, error } = trpc.user.getUserPosts.useQuery({
     limit: 20,
     offset: 0,
   });
@@ -24,24 +24,24 @@ export const PersonShowFavourites = () => {
   if (error) {
     return (
       <div className="text-center py-12 text-gray-500">
-        <p>加载失败,请稍后重试</p>
+        <p>加载失败，请稍后重试</p>
       </div>
     );
   }
 
   // 空状态
-  if (!data?.favoritedPosts || data.favoritedPosts.length === 0) {
+  if (!data?.posts || data.posts.length === 0) {
     return (
       <div className="text-center py-12 text-gray-400">
-        <p>暂无收藏的文章</p>
+        <p>暂无发表的文章</p>
       </div>
     );
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {data.favoritedPosts.map((post) => (
-        <PersonShowFavouriteCard
+      {data.posts.map((post) => (
+        <PersonShowCard
           key={post.id}
           id={post.id}
           title={post.title}
@@ -50,7 +50,7 @@ export const PersonShowFavourites = () => {
             username: post.author.username,
             avatar: post.author.avatar,
           }}
-          favoritesCount={post.favoritesCount || 0}
+          likesCount={post.likesCount || 0}
         />
       ))}
     </div>

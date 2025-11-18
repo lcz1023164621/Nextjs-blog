@@ -2,11 +2,11 @@
 
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Star } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-interface PersonShowFavouriteCardProps {
+interface PersonShowCardProps {
   id: string;
   title: string;
   coverImage?: string;
@@ -14,16 +14,16 @@ interface PersonShowFavouriteCardProps {
     username: string;
     avatar: string | null;
   };
-  favoritesCount: number;
+  likesCount: number;
 }
 
-export const PersonShowFavouriteCard = ({
+export const PersonShowCard = ({
   id,
   title,
   coverImage,
   author,
-  favoritesCount,
-}: PersonShowFavouriteCardProps) => {
+  likesCount,
+}: PersonShowCardProps) => {
   return (
     <Link href={`/post/${id}`}>
       <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer">
@@ -64,10 +64,10 @@ export const PersonShowFavouriteCard = ({
               <span className="text-xs text-gray-600 truncate">{author.username}</span>
             </div>
 
-            {/* 收藏数 */}
-            <div className="flex items-center gap-1 text-yellow-500 flex-shrink-0">
-              <Star className="w-3.5 h-3.5 fill-current" />
-              <span className="text-xs font-medium">{favoritesCount}</span>
+            {/* 点赞数 */}
+            <div className="flex items-center gap-1 text-red-500 flex-shrink-0">
+              <Heart className="w-3.5 h-3.5 fill-current" />
+              <span className="text-xs font-medium">{likesCount}</span>
             </div>
           </div>
         </div>

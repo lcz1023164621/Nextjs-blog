@@ -1,9 +1,9 @@
-import { PersonShowLikesView } from "@/modules/person/views/person-showlike-view.tsx/person-showlike-view";
+import { PersonShowView } from "@/modules/person/views/person-show-view/person-show-view";
 
 export default function PersonPage() {
     return(
         <div>
-            <PersonShowLikesView />
+            <PersonShowView />
         </div>
     )
 }
