@@ -113,12 +113,21 @@ export const userRouter = createTRPCRouter({
           },
         });
 
-        return {
-          success: true,
-          posts: userPosts.map(post => ({
+        // 为每篇文章添加点赞状态和统计
+        const postsWithLikeStatus = userPosts.map(post => {
+          // 检查当前用户是否点赞了该文章
+          const isLiked = post.likes.some(like => like.userId === user.id);
+          
+          return {
             ...post,
             likesCount: post.likes.length, // 添加点赞数统计
-          })),
+            isLiked, // 添加点赞状态
+          };
+        });
+
+        return {
+          success: true,
+          posts: postsWithLikeStatus,
         };
       } catch (error) {
         console.error('获取用户文章列表失败:', error);
