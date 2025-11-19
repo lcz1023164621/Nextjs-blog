@@ -27,6 +27,10 @@ npx drizzle-kit studio
 
 可写webhook加入到其中，需要使用ngrok等内网穿透工具.<br>
 还在继续写...
+演示图片：
+<img width="979" height="617" alt="image" src="https://github.com/user-attachments/assets/915ae9e9-f447-4c97-8ab5-72e594e78831" />
+<img width="1023" height="690" alt="image" src="https://github.com/user-attachments/assets/3e621112-736f-440d-b4cb-8abdb524bdb6" />
+
 
 ## Learn More
 
