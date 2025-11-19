@@ -41,12 +41,15 @@ export const PersonShowCard = ({
       setLiked(newLiked);
       setCount(prev => newLiked ? prev + 1 : prev - 1);
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       // 同步服务器状态
       setLiked(data.isLiked);
       toast.success(data.message);
-      // 刷新相关数据
-      utils.user.getUserPosts.invalidate();
+      // 刷新相关数据 - 使用 refetch 立即重新获取
+      await Promise.all([
+        utils.user.getUserPosts.refetch(),
+        utils.like.getLikedPosts.refetch(),
+      ]);
     },
     onError: (error) => {
       // 错误回滚

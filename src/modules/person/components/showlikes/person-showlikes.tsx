@@ -51,6 +51,7 @@ export const PersonShowlikes = () => {
             avatar: post.author.avatar,
           }}
           likesCount={post.likesCount || 0}
+          isLiked={true}
         />
       ))}
     </div>

@@ -51,6 +51,7 @@ export const PersonShowFavourites = () => {
             avatar: post.author.avatar,
           }}
           favoritesCount={post.favoritesCount || 0}
+          isFavorited={true}
         />
       ))}
     </div>
