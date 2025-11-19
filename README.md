@@ -1,9 +1,16 @@
 此项目基于nextjs开发，使用shadcn作为组件库，neon postgresql和drizzleorm进行数据库管理,trpc进行数据交互，使用clerk进行身份验证
 
 ## Getting Started
-首先，在项目根目录中创建.env.local文件
-获取neon密钥[https://neon.com](https://neon.com),创建新项目后打开dashboard并点击connection，获取其中的密钥
-之后获取clerk密钥[https://clerk.com](https://clerk.com),创建新项目后，打开Configure后找到API keys，获取其中的密钥
+首先，在项目根目录中创建.env.local文件.
+获取neon密钥[https://neon.com](https://neon.com),创建新项目后打开dashboard并点击connection，获取其中的密钥.
+之后获取clerk密钥[https://clerk.com](https://clerk.com),创建新项目后，打开Configure后找到API keys，获取其中的密钥.
+该项目中设置密钥名为
+### .env.local
+```env
+CLERK_SECRET_KEY=
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+DATABASE_URL=
+```
 将服务跑在本地中
 
 ```bash
@@ -17,6 +24,9 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 ```bash
 npx drizzle-kit studio
 ```
+
+可写webhook加入到其中，需要使用ngrok等内网穿透工具.
+还在继续写...
 
 ## Learn More
 
