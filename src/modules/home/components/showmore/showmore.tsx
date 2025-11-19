@@ -26,17 +26,17 @@ return(
             <MoreHorizontal className="w-[14px] h-[14px]" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="start">
-        <DropdownMenuLabel>更多</DropdownMenuLabel>
+      <DropdownMenuContent className="w-32 p-1" align="start">
+        <DropdownMenuLabel className="text-xs py-1 px-2">更多</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem className="text-xs py-1.5 px-2">
             不感兴趣
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem className="text-xs py-1.5 px-2">
             举报
           </DropdownMenuItem>
         </DropdownMenuGroup>

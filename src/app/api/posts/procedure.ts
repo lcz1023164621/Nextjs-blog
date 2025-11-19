@@ -86,7 +86,7 @@ export const postRouter = createTRPCRouter({
       z.object({
         title: z.string().min(1, '标题不能为空').max(200, '标题最多200个字符'),
         content: z.string().min(1, '内容不能为空'),
-        imageUrls: z.array(z.string().url()).min(1, '至少需要上传一张图片'), // 必须至少有一张图片
+        imageUrls: z.array(z.string().url()).optional().default([]), // 图片为可选，默认空数组
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -115,13 +115,15 @@ export const postRouter = createTRPCRouter({
           })
           .returning();
 
-        // 插入图片到 postImages 表
-        await db.insert(postImages).values(
-          imageUrls.map(url => ({
-            postId: newPost[0].id,
-            imageUrl: url,
-          }))
-        );
+        // 插入图片到 postImages 表（仅当有图片时）
+        if (imageUrls && imageUrls.length > 0) {
+          await db.insert(postImages).values(
+            imageUrls.map(url => ({
+              postId: newPost[0].id,
+              imageUrl: url,
+            }))
+          );
+        }
 
         return {
           success: true,

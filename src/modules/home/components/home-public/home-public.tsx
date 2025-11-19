@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { UserButton, useUser } from "@clerk/nextjs"
-import { Hash, ImageIcon, Smile, Video, X } from "lucide-react"
+import { ImageIcon, Smile, X } from "lucide-react"
 import { useState, useRef } from "react"
 import { trpc } from "@/trpc/client"
 import { toast } from "sonner"
@@ -110,7 +110,7 @@ export const HomePublic = () => {
       await createPostMutation.mutateAsync({
         title: title.trim(),
         content: content.trim(),
-        imageUrls: uploadedImages.length > 0 ? uploadedImages : undefined,
+        imageUrls: uploadedImages,
       })
 
       // 成功后清空输入框
@@ -196,13 +196,6 @@ export const HomePublic = () => {
               size="sm"
               className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
             >
-              <Hash className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
-            >
               <Smile className="w-5 h-5" />
             </Button>
             <Button
@@ -224,13 +217,6 @@ export const HomePublic = () => {
               className="hidden"
               onChange={handleImageUpload}
             />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
-            >
-              <Video className="w-5 h-5" />
-            </Button>
 
             {/* 发表按钮 */}
             <Button
