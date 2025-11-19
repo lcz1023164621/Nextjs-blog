@@ -1,12 +1,13 @@
 'use client';
 
-import { MessageSquare, Share2, MoreHorizontal } from 'lucide-react';
+import { MessageSquare, Share2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
 import { LikesButton } from '@/modules/likes/components/likes-button';
 import { FavouritesButton } from '@/modules/favourites/component/favourites-button';
+import { ShowMore } from '../showmore/showmore';
 
 interface TextContentCardProps {
   id: string;
@@ -128,13 +129,14 @@ export const HomeContentCard = ({
         <span className="font-medium text-gray-900 ml-auto">作者：{author.name}</span>
 
         {/* 更多 */}
-        <Button 
+        {/* <Button 
           variant="ghost" 
           size="sm" 
           className="h-7 w-7 p-0 hover:bg-gray-50 text-gray-600"
         >
           <MoreHorizontal className="w-[14px] h-[14px]" />
-        </Button>
+        </Button> */}
+        <ShowMore />
       </div>
     </Card>
   );

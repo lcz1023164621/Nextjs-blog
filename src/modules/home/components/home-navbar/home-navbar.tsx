@@ -38,7 +38,7 @@ export const HomeNavbar = () => {
                         <NavigationMenuItem>
                             <Link href="/about" legacyBehavior passHref>
                                 <NavigationMenuLink className={navigationMenuTriggerStyle() + " text-sm md:text-base"}>
-                                    关于
+                                    关于作者
                                 </NavigationMenuLink>
                             </Link>
                         </NavigationMenuItem>
