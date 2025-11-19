@@ -6,7 +6,7 @@ import { LanguageCard } from "../language-card/language-card"
 export const AuthorContentView = () => {
     
     return (
-        <div className="max-w-3xl mx-auto px-4 py-6">
+        <div className="max-w-3xl mx-auto px-4 pt-3 pb-6">
             <div className="grid grid-cols-2 gap-6">
                 {/* 左侧栏 */}
                 <div className="space-y-6">

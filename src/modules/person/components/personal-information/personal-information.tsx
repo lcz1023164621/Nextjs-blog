@@ -42,26 +42,6 @@ export const PersonalInformation = () => {
                     还没有简介
                 </div>
 
-                {/* 性别占位 */}
-                <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 text-sm mb-4">
-                    ♂
-                </div>
-
-                {/* 统计数据 */}
-                <div className="flex items-center gap-6 text-sm">
-                    <span className="text-gray-900">
-                        <span className="font-semibold">92</span>
-                        <span className="text-gray-500 ml-1">关注</span>
-                    </span>
-                    <span className="text-gray-900">
-                        <span className="font-semibold">7</span>
-                        <span className="text-gray-500 ml-1">粉丝</span>
-                    </span>
-                    <span className="text-gray-900">
-                        <span className="font-semibold">4</span>
-                        <span className="text-gray-500 ml-1">获赞与收藏</span>
-                    </span>
-                </div>
             </div>
         </div>
     );
