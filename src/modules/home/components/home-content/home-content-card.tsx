@@ -45,7 +45,7 @@ export const HomeContentCard = ({
     <Card className="p-4 hover:bg-accent/5 transition-colors border-b rounded-lg">
       {/* 标题 */}
     <Link href={`/post/${id}`}>
-      <h3 className="text-[17px] font-medium mb-3 leading-relaxed">
+      <h3 className="text-[20px] font-medium mb-3 leading-relaxed pl-2">
         {title}
       </h3>
     </Link>
@@ -78,12 +78,6 @@ export const HomeContentCard = ({
         <div className="flex-1 min-w-0">
           <p className="text-[15px] text-gray-700 leading-[1.7] line-clamp-3">
             {content}
-            <button className="text-blue-600 hover:text-blue-700 ml-1 inline-flex items-center">
-              阅读全文
-              <svg className="w-3 h-3 ml-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-              </svg>
-            </button>
           </p>
         </div>
       </div>

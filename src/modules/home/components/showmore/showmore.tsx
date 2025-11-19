@@ -28,6 +28,7 @@ return(
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="start">
         <DropdownMenuLabel>更多</DropdownMenuLabel>
+        <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem>
             不感兴趣

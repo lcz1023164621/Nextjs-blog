@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ClapperboardIcon, UserCircleIcon } from "lucide-react"
+import { UserCircleIcon } from "lucide-react"
 import { UserButton, SignInButton, SignedIn, SignedOut, useUser } from "@clerk/nextjs"
 import { useState, useEffect } from "react"
 import { trpc } from "@/trpc/client"
@@ -49,14 +49,6 @@ export const AuthButton = () => {
     <>
     <SignedIn>
         <UserButton>
-            <UserButton.MenuItems>
-                <UserButton.Link 
-                    label="Studio"
-                    href="/studio"
-                    labelIcon={<ClapperboardIcon className="size-4"/>}
-                />
-                <UserButton.Action label="manageAccount" />
-            </UserButton.MenuItems>
         </UserButton>
     </SignedIn>
     <SignedOut>
