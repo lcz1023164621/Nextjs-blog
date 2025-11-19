@@ -95,13 +95,13 @@ export const PostComment = ({
     };
 
     return(
-        <div className="p-4">
+        <div className="p-2">
             {/* 回复标签 */}
             {replyTo && (
-                <div className="flex items-center justify-between bg-blue-50 rounded-lg px-3 py-2 mb-2">
-                    <div className="flex items-center gap-2">
-                        <MessageCircle className="w-4 h-4 text-blue-500" />
-                        <span className="text-sm text-gray-700">
+                <div className="flex items-center justify-between bg-blue-50 rounded-lg px-2 py-1 mb-1">
+                    <div className="flex items-center gap-1.5">
+                        <MessageCircle className="w-3.5 h-3.5 text-blue-500" />
+                        <span className="text-xs text-gray-700">
                             回复 <span className="font-medium text-blue-600">@{replyTo.username}</span>
                         </span>
                     </div>
@@ -109,19 +109,19 @@ export const PostComment = ({
                         onClick={onCancelReply}
                         className="text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                        <X className="w-4 h-4" />
+                        <X className="w-3.5 h-3.5" />
                     </button>
                 </div>
             )}
 
             {/* 评论输入框 - 添加圆角背景 */}
-            <div className="flex items-center gap-3 bg-gray-50 rounded-full px-4 py-2 mb-3">
+            <div className="flex items-center gap-2 bg-gray-50 rounded-full px-3 py-1.5 mb-2">
                 {/* Clerk 头像 */}
                 <div className="flex-shrink-0">
                     <UserButton
                         appearance={{
                             elements: {
-                                avatarBox: "w-9 h-9",
+                                avatarBox: "w-7 h-7",
                             },
                         }}
                     />
@@ -131,7 +131,7 @@ export const PostComment = ({
                 <input
                     type="text"
                     placeholder={replyTo ? `回复 @${replyTo.username}...` : "说点什么..."}
-                    className="flex-1 bg-transparent border-none outline-none text-[14px] text-gray-600 placeholder:text-gray-400"
+                    className="flex-1 bg-transparent border-none outline-none text-xs text-gray-600 placeholder:text-gray-400"
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     onKeyDown={handleKeyPress}
@@ -145,38 +145,38 @@ export const PostComment = ({
                         disabled={isSubmitting}
                         className="flex-shrink-0 text-blue-500 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <Send className="w-5 h-5" />
+                        <Send className="w-4 h-4" />
                     </button>
                 )}
             </div>
 
             {/* 互动按钮区域 */}
-            <div className="flex items-center gap-6 text-gray-500">
+            <div className="flex items-center gap-4 text-gray-500">
                 {/* 点赞 */}
-                <button className={`flex items-center gap-1.5 transition-colors ${
+                <button className={`flex items-center gap-1 transition-colors ${
                     isLiked ? 'text-red-500' : 'hover:text-red-500'
                 }`}>
-                    <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-                    <span className="text-sm">{likesCount}</span>
+                    <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                    <span className="text-xs">{likesCount}</span>
                 </button>
 
                 {/* 收藏 */}
-                <button className={`flex items-center gap-1.5 transition-colors ${
+                <button className={`flex items-center gap-1 transition-colors ${
                     isFavorited ? 'text-yellow-500' : 'hover:text-yellow-500'
                 }`}>
-                    <Star className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} />
-                    <span className="text-sm">{favoritesCount}</span>
+                    <Star className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`} />
+                    <span className="text-xs">{favoritesCount}</span>
                 </button>
 
                 {/* 评论 */}
-                <button className="flex items-center gap-1.5 hover:text-blue-500 transition-colors">
-                    <MessageCircle className="w-5 h-5" />
-                    <span className="text-sm">{commentsCount}</span>
+                <button className="flex items-center gap-1 hover:text-blue-500 transition-colors">
+                    <MessageCircle className="w-4 h-4" />
+                    <span className="text-xs">{commentsCount}</span>
                 </button>
 
                 {/* 分享 */}
-                <button className="flex items-center gap-1.5 hover:text-green-500 transition-colors">
-                    <Share2 className="w-5 h-5" />
+                <button className="flex items-center gap-1 hover:text-green-500 transition-colors">
+                    <Share2 className="w-4 h-4" />
                 </button>
             </div>
         </div>

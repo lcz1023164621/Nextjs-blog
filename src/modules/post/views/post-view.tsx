@@ -33,8 +33,8 @@ export const PostView = ({ post }: { post: Post }) => {
 
     return(
         <div className="flex h-screen relative">
-            {/* 左侧：图片展示区 - 占据左侧空间 */}
-            <div className="flex-1">
+            {/* 左侧：图片展示区 - 占据左侧空间，固定不可滚动 */}
+            <div className="flex-1 overflow-hidden">
                 {IsHasPicture && <PostShowImg post={post} />}
             </div>
             
@@ -46,7 +46,7 @@ export const PostView = ({ post }: { post: Post }) => {
                 </div>
                 
                 {/* 可滚动的内容区域 */}
-                <div className="flex-1 overflow-y-auto mt-[170px] pb-28">
+                <div className="flex-1 overflow-y-auto mt-[120px] pb-20">
                     {/* 文章内容 */}
                     <PostContent post={post} />
                     
