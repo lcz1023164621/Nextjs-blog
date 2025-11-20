@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { UserButton, useUser } from "@clerk/nextjs"
-import { ImageIcon, Smile, X } from "lucide-react"
+import { ImageIcon, X } from "lucide-react"
 import { useState, useRef } from "react"
 import { trpc } from "@/trpc/client"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
+import { EmojiPicker } from "./emoji-picker"
 
 export const HomePublic = () => {
   const [title, setTitle] = useState("")
@@ -19,6 +20,7 @@ export const HomePublic = () => {
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const contentTextareaRef = useRef<HTMLTextAreaElement>(null)
   
   const router = useRouter()
   const { isSignedIn } = useUser()
@@ -79,6 +81,28 @@ export const HomePublic = () => {
   // 删除图片
   const handleRemoveImage = (index: number) => {
     setUploadedImages(prev => prev.filter((_, i) => i !== index))
+  }
+
+  // 处理表情选择
+  const handleEmojiSelect = (emoji: string) => {
+    const textarea = contentTextareaRef.current
+    
+    if (textarea) {
+      const start = textarea.selectionStart
+      const end = textarea.selectionEnd
+      const newContent = content.substring(0, start) + emoji + content.substring(end)
+      setContent(newContent)
+      
+      // 设置光标位置到表情后面
+      setTimeout(() => {
+        textarea.focus()
+        const newPosition = start + emoji.length
+        textarea.setSelectionRange(newPosition, newPosition)
+      }, 0)
+    } else {
+      // 如果无法获取 textarea，直接追加到末尾
+      setContent(prev => prev + emoji)
+    }
   }
 
   // 处理发表按钮点击
@@ -158,6 +182,7 @@ export const HomePublic = () => {
             onChange={(e) => setTitle(e.target.value)}
           />
           <Textarea
+            ref={contentTextareaRef}
             placeholder="分享此刻的想法..."
             className="min-h-24 max-h-40 border-none focus-visible:ring-0 resize-none text-[15px] px-3 py-2"
             rows={3}
@@ -191,13 +216,7 @@ export const HomePublic = () => {
 
           {/* 工具栏 */}
           <div className="flex items-center gap-4 mt-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
-            >
-              <Smile className="w-5 h-5" />
-            </Button>
+            <EmojiPicker onEmojiSelect={handleEmojiSelect} />
             <Button
               variant="ghost"
               size="sm"
