@@ -6,10 +6,12 @@ import { HomePublic } from "../components/home-public/home-public"
 export const Homeview = () => {
     return(
             <div className="max-w-3xl mx-auto px-4 py-6">
-                <HomeNavbar />
+                <div className="pb-6">
+                    <HomeNavbar />
+                </div>
                 
                 <div className="mb-4">
-                <HomePublic />
+                    <HomePublic />
                 </div>
                 <HomeContent />
             </div>

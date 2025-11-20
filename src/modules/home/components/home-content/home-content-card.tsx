@@ -1,6 +1,6 @@
 'use client';
 
-import { MessageSquare, Share2 } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { LikesButton } from '@/modules/likes/components/likes-button';
 import { FavouritesButton } from '@/modules/favourites/component/favourites-button';
 import { ShowMore } from '../showmore/showmore';
+import { HomeContentShare } from './home-content-share';
 
 interface TextContentCardProps {
   id: string;
@@ -103,14 +104,7 @@ export const HomeContentCard = ({
         </Button>
 
         {/* 分享 */}
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="gap-1.5 h-7 px-2.5 hover:bg-gray-50 text-gray-600"
-        >
-          <Share2 className="w-[14px] h-[14px]" />
-          分享
-        </Button>
+        <HomeContentShare postId={id} title={title} />
 
         {/* 收藏 */}
         <FavouritesButton 
@@ -123,13 +117,6 @@ export const HomeContentCard = ({
         <span className="font-medium text-gray-900 ml-auto">作者：{author.name}</span>
 
         {/* 更多 */}
-        {/* <Button 
-          variant="ghost" 
-          size="sm" 
-          className="h-7 w-7 p-0 hover:bg-gray-50 text-gray-600"
-        >
-          <MoreHorizontal className="w-[14px] h-[14px]" />
-        </Button> */}
         <ShowMore />
       </div>
     </Card>
