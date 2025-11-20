@@ -2,6 +2,7 @@
 
 ## Getting Started
 安装nodejs环境，最好在v19以上 [https://nodejs.org/zh-cn](https://nodejs.org/zh-cn)<br><br>
+安装完成后打开项目文件执行<br><br>
 ```bash
 npm install
 # or
