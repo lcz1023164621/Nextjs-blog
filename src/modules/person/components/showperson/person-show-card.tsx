@@ -99,9 +99,19 @@ export const PersonShowCard = ({
               className="w-full h-full object-cover"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
             />
+          ) : author.avatar ? (
+            <Image
+              src={author.avatar}
+              alt={author.username}
+              fill
+              className="w-full h-full object-cover"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+            />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
-              <span className="text-sm">暂无封面</span>
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center text-white text-4xl font-semibold">
+                {author.username.charAt(0).toUpperCase()}
+              </div>
             </div>
           )}
         </div>

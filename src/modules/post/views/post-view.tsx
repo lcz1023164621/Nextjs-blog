@@ -3,20 +3,14 @@
 import { PostShowImg } from "../components/post-show-img"
 import { Post } from "@/model/post"
 import { PostTitle } from "../components/post-title"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { PostContent } from "../components/post-content"
 import { PostComment } from "../components/post-comment"
 import { PostCommentShow } from "../components/post-comment-show"
 
 export const PostView = ({ post }: { post: Post }) => {
 
-    const [IsHasPicture , setIsHasPicture] = useState(false);
     const [replyTo, setReplyTo] = useState<{ commentId: string; username: string } | null>(null);
-
-    useEffect(() => {
-    if(post.images && post.images.length > 0) 
-        setIsHasPicture(true);
-    } , [post])
 
     // 处理回复操作
     const handleReply = (commentId: string, username: string) => {
@@ -35,7 +29,7 @@ export const PostView = ({ post }: { post: Post }) => {
         <div className="flex h-screen relative">
             {/* 左侧：图片展示区 - 占据左侧空间，固定不可滚动 */}
             <div className="flex-1 overflow-hidden">
-                {IsHasPicture && <PostShowImg post={post} />}
+                <PostShowImg post={post} />
             </div>
             
             {/* 右侧：信息栏 - 固定宽度 */}
