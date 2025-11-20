@@ -2,7 +2,7 @@
 
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Heart } from 'lucide-react';
+import { Heart, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -65,6 +65,27 @@ export const PersonShowCard = ({
     toggleLikeMutation.mutate({ postId: id });
   };
 
+  // 删除文章
+  const deletePostMutation = trpc.post.deletePost.useMutation({
+    onSuccess: async (data) => {
+      toast.success(data.message);
+      // 刷新用户文章列表
+      await utils.user.getUserPosts.refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || '删除失败');
+    },
+  });
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault(); // 阻止 Link 导航
+    e.stopPropagation();
+    
+    if (confirm('确定要删除这篇文章吗？')) {
+      deletePostMutation.mutate({ postId: id });
+    }
+  };
+
   return (
     <Link href={`/post/${id}`}>
       <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer">
@@ -105,19 +126,34 @@ export const PersonShowCard = ({
               <span className="text-xs text-gray-600 truncate">{author.username}</span>
             </div>
 
-            {/* 点赞按钮 */}
-            <button
-              onClick={handleLikeClick}
-              disabled={toggleLikeMutation.isPending}
-              className={`flex items-center gap-1 flex-shrink-0 transition-all hover:scale-110 ${
-                liked ? 'text-red-500' : 'text-gray-400 hover:text-red-400'
-              } ${toggleLikeMutation.isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-            >
-              <Heart className={`w-3.5 h-3.5 transition-all ${
-                liked ? 'fill-current' : ''
-              }`} />
-              <span className="text-xs font-medium">{count}</span>
-            </button>
+            {/* 操作按钮 */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* 点赞按钮 */}
+              <button
+                onClick={handleLikeClick}
+                disabled={toggleLikeMutation.isPending}
+                className={`flex items-center gap-1 transition-all hover:scale-110 ${
+                  liked ? 'text-red-500' : 'text-gray-400 hover:text-red-400'
+                } ${toggleLikeMutation.isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              >
+                <Heart className={`w-3.5 h-3.5 transition-all ${
+                  liked ? 'fill-current' : ''
+                }`} />
+                <span className="text-xs font-medium">{count}</span>
+              </button>
+
+              {/* 删除按钮 */}
+              <button
+                onClick={handleDeleteClick}
+                disabled={deletePostMutation.isPending}
+                className={`flex items-center transition-all hover:scale-110 text-gray-400 hover:text-red-500 ${
+                  deletePostMutation.isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                }`}
+                title="删除文章"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </Card>

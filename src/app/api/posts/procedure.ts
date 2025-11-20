@@ -437,6 +437,83 @@ export const postRouter = createTRPCRouter({
           message: '获取文章统计信息失败',
         });
       }
+    }),
+
+  // 删除文章 - 受保护的路由
+  deletePost: protectedProcedure
+    .input(
+      z.object({
+        postId: z.string().uuid('无效的文章ID'),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { postId } = input;
+      const clerkId = ctx.userId;
+
+      try {
+        // 通过 clerkId 查找数据库中的用户
+        const user = await db.query.users.findFirst({
+          where: eq(users.clerkId, clerkId),
+        });
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '用户不存在',
+          });
+        }
+
+        // 查询文章是否存在
+        const post = await db.query.posts.findFirst({
+          where: eq(posts.id, postId),
+        });
+
+        if (!post) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '文章不存在',
+          });
+        }
+
+        // 验证是否为文章作者
+        if (post.authorId !== user.id) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: '您没有权限删除此文章',
+          });
+        }
+
+        // 删除关联的图片记录
+        await db.delete(postImages).where(eq(postImages.postId, postId));
+
+        // 删除关联的点赞记录
+        await db.delete(postLikes).where(eq(postLikes.postId, postId));
+
+        // 删除关联的收藏记录
+        await db.delete(postFavorites).where(eq(postFavorites.postId, postId));
+
+        // 删除关联的评论记录
+        await db.delete(comments).where(eq(comments.postId, postId));
+
+        // 删除文章
+        await db.delete(posts).where(eq(posts.id, postId));
+
+        return {
+          success: true,
+          message: '文章删除成功',
+        };
+      } catch (error) {
+        console.error('删除文章失败:', error);
+        
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '删除文章失败，请稍后重试',
+        });
+      }
     })
 });
 
