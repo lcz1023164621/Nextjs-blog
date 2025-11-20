@@ -18,6 +18,11 @@ CLERK_SECRET_KEY=
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 DATABASE_URL=
 ```
+<br>更新数据库<br>
+```bash
+npx drizzle-kit push
+```
+
 将服务跑在本地中
 
 ```bash
