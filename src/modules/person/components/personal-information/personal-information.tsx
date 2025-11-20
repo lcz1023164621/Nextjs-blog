@@ -2,9 +2,11 @@
 
 import { useUser } from "@clerk/nextjs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PersonalDetails } from "./personal-details";
 
 export const PersonalInformation = () => {
     const { user } = useUser();
+
     
     if (!user) {
         return null;
@@ -37,10 +39,8 @@ export const PersonalInformation = () => {
                     <span>邮箱: {email}</span>
                 </div>
 
-                {/* 简介占位 */}
-                <div className="text-sm text-gray-600 mb-4">
-                    还没有简介
-                </div>
+                {/* 简介区域 */}
+                <PersonalDetails />
 
             </div>
         </div>

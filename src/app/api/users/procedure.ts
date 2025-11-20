@@ -142,6 +142,102 @@ export const userRouter = createTRPCRouter({
         });
       }
     }),
+
+  // 获取用户信息 - 受保护的路由
+  getUserInfo: protectedProcedure
+    .query(async ({ ctx }) => {
+      const clerkId = ctx.userId;
+
+      try {
+        // 通过 clerkId 查找数据库中的用户
+        const user = await db.query.users.findFirst({
+          where: eq(users.clerkId, clerkId),
+          columns: {
+            id: true,
+            username: true,
+            avatar: true,
+            bio: true,
+            email: true,
+            createdAt: true,
+          },
+        });
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '用户不存在',
+          });
+        }
+
+        return {
+          success: true,
+          user,
+        };
+      } catch (error) {
+        console.error('获取用户信息失败:', error);
+        
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '获取用户信息失败',
+        });
+      }
+    }),
+
+  // 更新用户简介 - 受保护的路由
+  updateUserBio: protectedProcedure
+    .input(
+      z.object({
+        bio: z.string().max(500, '简介不能超过500字').optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const clerkId = ctx.userId;
+      const { bio } = input;
+
+      try {
+        // 通过 clerkId 查找数据库中的用户
+        const user = await db.query.users.findFirst({
+          where: eq(users.clerkId, clerkId),
+        });
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '用户不存在',
+          });
+        }
+
+        // 更新用户简介
+        const updatedUser = await db.update(users)
+          .set({
+            bio,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.clerkId, clerkId))
+          .returning();
+
+        return {
+          success: true,
+          message: '简介更新成功',
+          user: updatedUser[0],
+        };
+      } catch (error) {
+        console.error('更新用户简介失败:', error);
+        
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '更新用户简介失败',
+        });
+      }
+    }),
 });
 
 // 导出类型

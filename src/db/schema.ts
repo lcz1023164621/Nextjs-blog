@@ -8,6 +8,7 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).unique(),
   username: varchar('username', { length: 50 }).notNull().unique(),
   avatar: text('avatar'),
+  bio: text('bio'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (t) => [uniqueIndex('clerk_id_idx').on(t.clerkId)]);
