@@ -4,6 +4,8 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/',
+  '/about(.*)',  // 允许未登录用户访问关于页面
+  '/api/trpc(.*)',  // 允许未登录用户访问 tRPC API
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
