@@ -1,4 +1,4 @@
-此项目基于nextjs开发，使用shadcn作为组件库，neon postgresql和drizzleorm进行数据库管理,trpc进行数据交互，使用clerk进行身份验证,调用deepseek api集成翻译功能
+此项目基于nextjs开发，使用shadcn作为组件库，neon postgresql和drizzleorm进行数据库管理,trpc进行数据交互，使用clerk进行身份验证,调用deepseek api集成翻译和搜索功能
 
 ## Getting Started
 安装nodejs环境，最好在v19以上 [https://nodejs.org/zh-cn](https://nodejs.org/zh-cn)<br><br>
@@ -43,8 +43,17 @@ npx drizzle-kit studio
 可写webhook加入到其中，需要使用ngrok等内网穿透工具.<br><br>
 还在继续写...<br><br>
 演示图片：
-<img width="979" height="617" alt="image" src="https://github.com/user-attachments/assets/915ae9e9-f447-4c97-8ab5-72e594e78831" />
-<img width="1023" height="690" alt="image" src="https://github.com/user-attachments/assets/3e621112-736f-440d-b4cb-8abdb524bdb6" />
+
+<img width="1575" height="969" alt="image" src="https://github.com/user-attachments/assets/6c1b11d9-8c5a-4b1c-8aef-4135aebc2349" /><br>
+
+<img width="1575" height="969" alt="image" src="https://github.com/user-attachments/assets/ce479f4c-7af6-4bb0-86c1-7d3713aba51b" /><br>
+
+<img width="1575" height="969" alt="image" src="https://github.com/user-attachments/assets/e797d8cd-cf98-4108-8041-7ef181e28cef" /> <br>
+
+<img width="1575" height="969" alt="image" src="https://github.com/user-attachments/assets/dd8ae2bf-6d5b-40e0-8e5f-adb1d9ef4e96" />
+
+
+
 
 
 ## Learn More
