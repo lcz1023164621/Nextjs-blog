@@ -26,6 +26,10 @@ type Post = {
         id: string
         imageUrl: string
     }[]
+    tags?: {
+        id: string
+        name: string
+    }[]
 }
 
 export const HomeContent = () => {
@@ -181,6 +185,7 @@ export const HomeContent = () => {
                         likesCount: post.likesCount,
                         favoritesCount: post.favoritesCount,
                     }}
+                    tags={post.tags}
                     onLikeChange={(isLiked) => handleLikeChange(post.id, isLiked)}
                     onFavoriteChange={(isFavorited) => handleFavoriteChange(post.id, isFavorited)}
                 />

@@ -6,6 +6,129 @@ import { posts, users } from '@/db/schema';
 import { sql, or, ilike, desc } from 'drizzle-orm';
 
 export const aiRouter = createTRPCRouter({
+  // AI生成标签 - 公开路由
+  generateTags: baseProcedure
+    .input(
+      z.object({
+        title: z.string().min(1, '标题不能为空'),
+        content: z.string().min(1, '内容不能为空'),
+        maxTags: z.number().min(1).max(10).default(5), // 最多生成的标签数
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { title, content, maxTags } = input;
+
+      try {
+        const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+        const DEEPSEEK_BASE_URL = process.env.DEEPSEEK_BASE_URL;
+
+        if (!DEEPSEEK_API_KEY || !DEEPSEEK_BASE_URL) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'DeepSeek API配置未设置',
+          });
+        }
+
+        // 构建生成标签的提示词
+        const systemPrompt = `你是一个专业的内容分析助手，请根据文章标题和内容，提取或生成最相关的标签。
+
+要求：
+1. 标签应该简洁明了，每个标签2-6个字符
+2. 标签要准确反映文章的主题、领域、技术点或关键概念
+3. 优先提取文章中直接提到的关键词
+4. 可以适当生成归纳性的标签
+5. 返回${maxTags}个以内的标签
+6. 以JSON数组格式返回，例如：["标签1", "标签2", "标签3"]
+7. 只返回JSON数组，不要其他内容`;
+
+        const userPrompt = `标题：${title}\n\n内容：${content.substring(0, 500)}${content.length > 500 ? '...' : ''}`;
+
+        // 调用 DeepSeek API
+        const response = await fetch(`${DEEPSEEK_BASE_URL}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages: [
+              {
+                role: 'system',
+                content: systemPrompt,
+              },
+              {
+                role: 'user',
+                content: userPrompt,
+              },
+            ],
+            temperature: 0.5,
+            max_tokens: 200,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `DeepSeek API调用失败: ${errorData.error?.message || response.statusText}`,
+          });
+        }
+
+        const data = await response.json();
+        const aiResponse = data.choices?.[0]?.message?.content?.trim();
+
+        if (!aiResponse) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: '生成标签失败',
+          });
+        }
+
+        // 解析JSON数组
+        let tags: string[] = [];
+        try {
+          tags = JSON.parse(aiResponse);
+          if (!Array.isArray(tags)) {
+            throw new Error('返回格式不是数组');
+          }
+          // 过滤和清理标签
+          tags = tags
+            .filter(tag => typeof tag === 'string' && tag.trim().length > 0)
+            .map(tag => tag.trim())
+            .slice(0, maxTags);
+        } catch (parseError) {
+          console.error('解析标签失败:', parseError, 'AI返回:', aiResponse);
+          // 尝试从文本中提取标签（备用方案）
+          const matches = aiResponse.match(/"([^"]+)"/g);
+          if (matches) {
+            tags = matches.map((m: string) => m.replace(/"/g, '').trim()).slice(0, maxTags);
+          }
+        }
+
+        if (tags.length === 0) {
+          // 如果AI无法生成标签，使用标题中的关键词作为后备
+          tags = [title.split(' ')[0].substring(0, 10)];
+        }
+
+        return {
+          success: true,
+          tags,
+        };
+      } catch (error) {
+        console.error('AI生成标签失败:', error);
+        
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'AI生成标签失败，请稍后重试',
+        });
+      }
+    }),
+
   // AI翻译 - 公开路由
   translate: baseProcedure
     .input(

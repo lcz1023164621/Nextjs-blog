@@ -242,7 +242,7 @@ export const HomePublic = () => {
               variant="default"
               className="ml-auto h-8 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handlePublish}
-              disabled={isSubmitting || !title.trim() || !content.trim()}
+              disabled={isSubmitting || isUploading || !title.trim() || !content.trim()}
             >
               {isSubmitting ? "发表中..." : "发表"}
             </Button>

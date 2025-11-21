@@ -14,6 +14,10 @@ export type Post = {
     id: string;
     imageUrl: string;
   }[];
+  tags?: {
+    id: string;
+    name: string;
+  }[];
   likesCount?: number;
   favoritesCount?: number;
   commentsCount?: number;

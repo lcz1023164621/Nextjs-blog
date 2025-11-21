@@ -78,6 +78,27 @@ export const postFavorites = pgTable('post_favorites', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+/* ===================== 标签表 ===================== */
+// 文章标签
+export const tags = pgTable('tags', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 50 }).notNull().unique(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+/* ===================== 文章-标签关联表 ===================== */
+// 文章与标签的多对多关系
+export const postTags = pgTable('post_tags', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  postId: uuid('post_id')
+    .notNull()
+    .references(() => posts.id, { onDelete: 'cascade' }),
+  tagId: uuid('tag_id')
+    .notNull()
+    .references(() => tags.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 /* ===================== 关系定义 ===================== */
 // 用户 - 文章
 export const usersRelations = relations(users, ({ many }) => ({
@@ -85,6 +106,23 @@ export const usersRelations = relations(users, ({ many }) => ({
   comments: many(comments), // 一个用户有多个评论
   postLikes: many(postLikes), // 一个用户可以点赞多篇文章
   postFavorites: many(postFavorites), // 一个用户可以收藏多篇文章
+}));
+
+// 标签 - 文章
+export const tagsRelations = relations(tags, ({ many }) => ({
+  postTags: many(postTags), // 一个标签可以关联多篇文章
+}));
+
+// 文章-标签关联
+export const postTagsRelations = relations(postTags, ({ one }) => ({
+  post: one(posts, {
+    fields: [postTags.postId],
+    references: [posts.id],
+  }),
+  tag: one(tags, {
+    fields: [postTags.tagId],
+    references: [tags.id],
+  }),
 }));
 
 // 文章 - 用户 / 图片 / 评论
@@ -97,6 +135,7 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
   comments: many(comments), // 一篇文章有多个评论
   likes: many(postLikes), // 一篇文章可以被多个用户点赞
   favorites: many(postFavorites), // 一篇文章可以被多个用户收藏
+  postTags: many(postTags), // 一篇文章可以有多个标签
 }));
 
 // 图片 - 文章

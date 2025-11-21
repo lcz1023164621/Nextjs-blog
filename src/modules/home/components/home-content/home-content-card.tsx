@@ -9,6 +9,7 @@ import { LikesButton } from '@/modules/likes/components/likes-button';
 import { FavouritesButton } from '@/modules/favourites/component/favourites-button';
 import { ShowMore } from '../showmore/showmore';
 import { HomeContentShare } from './home-content-share';
+import { Label } from '@/modules/ai/label/label';
 import { useState } from 'react';
 
 interface TextContentCardProps {
@@ -26,6 +27,10 @@ interface TextContentCardProps {
     likesCount?: number;
     favoritesCount?: number;
   };
+  tags?: Array<{
+    id: string;
+    name: string;
+  }>;
   onLikeChange?: (isLiked: boolean) => void;
   onFavoriteChange?: (isFavorited: boolean) => void;
 }
@@ -39,6 +44,7 @@ export const HomeContentCard = ({
   author,
   stats,
   id,
+  tags,
   onLikeChange,
   onFavoriteChange,
 }: TextContentCardProps) => {
@@ -163,6 +169,15 @@ export const HomeContentCard = ({
           </div>
         </div>
       </div>
+
+      {/* 标签 */}
+      {tags && tags.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-3 pl-2">
+          {tags.map(tag => (
+            <Label key={tag.id} name={tag.name} />
+          ))}
+        </div>
+      )}
 
       {/* 底部互动栏 */}
       <div className="flex items-center gap-5 mt-4 text-[13px] text-gray-500">

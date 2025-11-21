@@ -97,23 +97,6 @@ export const SearchButton = forwardRef<SearchButtonRef, SearchButtonProps>(({ se
                     
                     {searchResults && (
                         <div className="space-y-4">
-                            {/* 扩展关键词 */}
-                            {searchResults.expandedKeywords && searchResults.expandedKeywords.length > 1 && (
-                                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="text-xs text-gray-600">相关关键词：</span>
-                                        {searchResults.expandedKeywords.map((keyword, index) => (
-                                            <span 
-                                                key={index}
-                                                className="inline-block px-2 py-1 bg-white border border-gray-300 rounded text-xs text-gray-700"
-                                            >
-                                                {keyword}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
                             {/* AI 总结 */}
                             {searchResults.aiSummary && (
                                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

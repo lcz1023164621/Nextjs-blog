@@ -3,6 +3,7 @@
 import { Post } from "@/model/post"
 import { useState } from "react"
 import { trpc } from "@/trpc/client"
+import { Label } from "@/modules/ai/label/label"
 
 
 export const PostContent = ({ post }: { post: Post }) => {
@@ -37,6 +38,17 @@ export const PostContent = ({ post }: { post: Post }) => {
         >
             {translatedContent ? '原文' : '翻译'}
         </button>
+            
+        {/* 标签显示区域 */}
+        {post.tags && post.tags.length > 0 && (
+            <div className="mt-4">
+                <div className="flex flex-wrap gap-2">
+                    {post.tags.map((tag) => (
+                        <Label key={tag.id} name={tag.name} />
+                    ))}
+                </div>
+            </div>
+        )}
     </div>
     )
 }

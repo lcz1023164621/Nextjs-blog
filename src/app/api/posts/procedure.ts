@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { protectedProcedure, createTRPCRouter, baseProcedure } from '@/trpc/init';
 import { db } from '@/db';
-import { posts, users, postImages, postLikes, postFavorites, comments } from '@/db/schema';
+import { posts, users, postImages, postLikes, postFavorites, comments, tags, postTags } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { writeFile, mkdir } from 'fs/promises';
@@ -125,6 +125,91 @@ export const postRouter = createTRPCRouter({
           );
         }
 
+        // 使用 AI 生成标签
+        try {
+          const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+          const DEEPSEEK_BASE_URL = process.env.DEEPSEEK_BASE_URL;
+
+          if (DEEPSEEK_API_KEY && DEEPSEEK_BASE_URL) {
+            const systemPrompt = `你是一个专业的内容分析助手，请根据文章标题和内容，提取或生成最相关的标签。
+
+要求：
+1. 标签应该简洁明了，每个标签2-6个字符
+2. 标签要准确反映文章的主题、领域、技术点或关键概念
+3. 优先提取文章中直接提到的关键词
+4. 可以适当生成归纳性的标签
+5. 返回5个以内的标签
+6. 以JSON数组格式返回，例如：["标签1", "标签2", "标签3"]
+7. 只返回JSON数组，不要其他内容`;
+
+            const userPrompt = `标题：${title}\n\n内容：${content.substring(0, 500)}${content.length > 500 ? '...' : ''}`;
+
+            const response = await fetch(`${DEEPSEEK_BASE_URL}/chat/completions`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+              },
+              body: JSON.stringify({
+                model: 'deepseek-chat',
+                messages: [
+                  { role: 'system', content: systemPrompt },
+                  { role: 'user', content: userPrompt },
+                ],
+                temperature: 0.5,
+                max_tokens: 200,
+              }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              const aiResponse = data.choices?.[0]?.message?.content?.trim();
+              
+              if (aiResponse) {
+                let generatedTags: string[] = [];
+                try {
+                  generatedTags = JSON.parse(aiResponse);
+                  if (Array.isArray(generatedTags)) {
+                    generatedTags = generatedTags
+                      .filter(tag => typeof tag === 'string' && tag.trim().length > 0)
+                      .map(tag => tag.trim())
+                      .slice(0, 5);
+                  }
+                } catch {
+                  const matches = aiResponse.match(/"([^"]+)"/g);
+                  if (matches) {
+                    generatedTags = matches.map((m: string) => m.replace(/"/g, '').trim()).slice(0, 5);
+                  }
+                }
+
+                // 为每个标签创建或查找标签记录，并关联到文章
+                for (const tagName of generatedTags) {
+                  // 查找或创建标签
+                  let tag = await db.query.tags.findFirst({
+                    where: eq(tags.name, tagName),
+                  });
+
+                  if (!tag) {
+                    const newTag = await db.insert(tags)
+                      .values({ name: tagName })
+                      .returning();
+                    tag = newTag[0];
+                  }
+
+                  // 创建文章-标签关联
+                  await db.insert(postTags).values({
+                    postId: newPost[0].id,
+                    tagId: tag.id,
+                  });
+                }
+              }
+            }
+          }
+        } catch (tagError) {
+          console.error('生成标签失败，但文章创建成功:', tagError);
+          // 标签生成失败不影响文章创建
+        }
+
         return {
           success: true,
           post: newPost[0],
@@ -156,7 +241,7 @@ export const postRouter = createTRPCRouter({
       const clerkId = ctx.userId; // 获取当前登录用户的 clerkId（可能为 null）
 
       try {
-        // 查询文章，包含作者和图片信息
+        // 查询文章，包含作者、图片和标签信息
         const postList = await db.query.posts.findMany({
           limit,
           offset,
@@ -173,6 +258,16 @@ export const postRouter = createTRPCRouter({
               columns: {
                 id: true,
                 imageUrl: true,
+              },
+            },
+            postTags: {
+              with: {
+                tag: {
+                  columns: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
             },
           },
@@ -240,6 +335,7 @@ export const postRouter = createTRPCRouter({
               likesCount,
               favoritesCount,
               commentsCount,
+              tags: post.postTags.map(pt => pt.tag),
             };
           })
         );
@@ -283,6 +379,16 @@ export const postRouter = createTRPCRouter({
               columns: {
                 id: true,
                 imageUrl: true,
+              },
+            },
+            postTags: {
+              with: {
+                tag: {
+                  columns: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
             },
           },
@@ -355,6 +461,7 @@ export const postRouter = createTRPCRouter({
             commentsCount,
             isLiked,
             isFavorited,
+            tags: post.postTags.map(pt => pt.tag),
           }
         };
       }
@@ -512,6 +619,149 @@ export const postRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: '删除文章失败，请稍后重试',
+        });
+      }
+    }),
+
+  // 根据标签名获取文章列表 - 公开路由
+  getPostsByTag: baseProcedure
+    .input(
+      z.object({
+        tagName: z.string().min(1, '标签名不能为空'),
+        limit: z.number().min(1).max(50).default(20),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const { tagName, limit } = input;
+      const clerkId = ctx.userId;
+
+      try {
+        // 查找标签
+        const tag = await db.query.tags.findFirst({
+          where: eq(tags.name, tagName),
+        });
+
+        if (!tag) {
+          return {
+            success: true,
+            posts: [],
+            tag: { name: tagName },
+          };
+        }
+
+        // 查询该标签关联的文章
+        const postTagsList = await db.query.postTags.findMany({
+          where: eq(postTags.tagId, tag.id),
+          limit,
+          with: {
+            post: {
+              with: {
+                author: {
+                  columns: {
+                    id: true,
+                    username: true,
+                    avatar: true,
+                  },
+                },
+                images: {
+                  columns: {
+                    id: true,
+                    imageUrl: true,
+                  },
+                },
+                postTags: {
+                  with: {
+                    tag: {
+                      columns: {
+                        id: true,
+                        name: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        // 提取文章并添加统计数据
+        let currentUser = null;
+        if (clerkId) {
+          currentUser = await db.query.users.findFirst({
+            where: eq(users.clerkId, clerkId),
+          });
+        }
+
+        const postsWithStatus = await Promise.all(
+          postTagsList.map(async (pt) => {
+            const post = pt.post;
+            let isLiked = false;
+            let isFavorited = false;
+
+            if (currentUser) {
+              const likeRecord = await db.query.postLikes.findFirst({
+                where: and(
+                  eq(postLikes.postId, post.id),
+                  eq(postLikes.userId, currentUser.id)
+                ),
+              });
+              isLiked = !!likeRecord;
+
+              const favoriteRecord = await db.query.postFavorites.findFirst({
+                where: and(
+                  eq(postFavorites.postId, post.id),
+                  eq(postFavorites.userId, currentUser.id)
+                ),
+              });
+              isFavorited = !!favoriteRecord;
+            }
+
+            // 统计数据
+            const likesCountResult = await db
+              .select({ count: sql<number>`count(*)` })
+              .from(postLikes)
+              .where(eq(postLikes.postId, post.id));
+            const likesCount = Number(likesCountResult[0]?.count || 0);
+
+            const favoritesCountResult = await db
+              .select({ count: sql<number>`count(*)` })
+              .from(postFavorites)
+              .where(eq(postFavorites.postId, post.id));
+            const favoritesCount = Number(favoritesCountResult[0]?.count || 0);
+
+            const commentsCountResult = await db
+              .select({ count: sql<number>`count(*)` })
+              .from(comments)
+              .where(eq(comments.postId, post.id));
+            const commentsCount = Number(commentsCountResult[0]?.count || 0);
+
+            return {
+              ...post,
+              isLiked,
+              isFavorited,
+              likesCount,
+              favoritesCount,
+              commentsCount,
+              tags: post.postTags.map(pt => pt.tag),
+            };
+          })
+        );
+
+        return {
+          success: true,
+          posts: postsWithStatus,
+          tag: { id: tag.id, name: tag.name },
+        };
+      } catch (error) {
+        console.error('获取标签文章失败:', error);
+        
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '获取标签文章失败',
         });
       }
     })
