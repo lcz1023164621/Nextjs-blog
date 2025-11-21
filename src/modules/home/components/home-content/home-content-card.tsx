@@ -9,6 +9,8 @@ import { LikesButton } from '@/modules/likes/components/likes-button';
 import { FavouritesButton } from '@/modules/favourites/component/favourites-button';
 import { ShowMore } from '../showmore/showmore';
 import { HomeContentShare } from './home-content-share';
+import { TranslateButton } from '@/modules/ai/translate/translate-button';
+import { useState } from 'react';
 
 interface TextContentCardProps {
   id: string;
@@ -41,6 +43,20 @@ export const HomeContentCard = ({
   onLikeChange,
   onFavoriteChange,
 }: TextContentCardProps) => {
+  const [translatedContent, setTranslatedContent] = useState<string | null>(null);
+  const [isShowingTranslation, setIsShowingTranslation] = useState(false);
+
+  const handleTranslated = (translated: string) => {
+    setTranslatedContent(translated);
+    setIsShowingTranslation(true);
+  };
+
+  const toggleTranslation = () => {
+    if (translatedContent) {
+      setIsShowingTranslation(!isShowingTranslation);
+    }
+  };
+
   return (
 
     <Card className="p-4 hover:bg-accent/5 transition-colors border-b rounded-lg">
@@ -77,9 +93,31 @@ export const HomeContentCard = ({
 
         {/* 内容区域 */}
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] text-gray-700 leading-[1.7] line-clamp-3">
-            {content}
-          </p>
+          <div className="flex items-start gap-2">
+            <p className="text-[15px] text-gray-700 leading-[1.7] line-clamp-3 flex-1">
+              {isShowingTranslation && translatedContent ? translatedContent : content}
+            </p>
+            <div className="flex flex-col gap-1 flex-shrink-0">
+              <TranslateButton 
+                text={content}
+                targetLang="zh"
+                onTranslated={handleTranslated}
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2"
+              />
+              {translatedContent && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleTranslation}
+                  className="h-7 px-2 text-xs text-gray-600"
+                >
+                  {isShowingTranslation ? '原文' : '译文'}
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
