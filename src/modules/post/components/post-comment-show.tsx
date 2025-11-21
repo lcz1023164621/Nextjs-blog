@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { Loader2, MessageCircle, Reply } from "lucide-react";
+import { useState } from "react";
 
 interface PostCommentShowProps {
     postId: string;
@@ -12,6 +13,12 @@ interface PostCommentShowProps {
 }
 
 export const PostCommentShow = ({ postId, onReply }: PostCommentShowProps) => {
+    // 存储翻译结果
+    const [translatedComments, setTranslatedComments] = useState<Record<string, string>>({});
+    
+    // AI翻译 mutation
+    const translateMutation = trpc.ai.translate.useMutation();
+    
     // 获取评论列表
     const { data, isLoading, error } = trpc.comment.getCommentsByPostId.useQuery({
         postId,
@@ -84,17 +91,47 @@ export const PostCommentShow = ({ postId, onReply }: PostCommentShowProps) => {
 
                             {/* 评论文本 */}
                             <p className="text-sm text-gray-700 break-words mb-2">
-                                {comment.content}
+                                {translatedComments[comment.id] || comment.content}
                             </p>
 
-                            {/* 回复按钮 */}
-                            <button
-                                onClick={() => onReply(comment.id, comment.author.username)}
-                                className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-blue-500 transition-colors"
-                            >
-                                <Reply className="w-3.5 h-3.5" />
-                                <span>回复</span>
-                            </button>
+                            {/* 翻译和回复按钮 */}
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => {
+                                        // 如果已经翻译过，则恢复原文
+                                        if (translatedComments[comment.id]) {
+                                            setTranslatedComments(prev => {
+                                                const newState = { ...prev };
+                                                delete newState[comment.id];
+                                                return newState;
+                                            });
+                                        } else {
+                                            // 否则进行翻译
+                                            translateMutation.mutate(
+                                                { text: comment.content, targetLang: 'zh' },
+                                                {
+                                                    onSuccess: (data) => {
+                                                        setTranslatedComments(prev => ({
+                                                            ...prev,
+                                                            [comment.id]: data.translatedText
+                                                        }));
+                                                    }
+                                                }
+                                            );
+                                        }
+                                    }}
+                                    className="text-xs text-gray-500 hover:text-blue-500 transition-colors"
+                                >
+                                    {translatedComments[comment.id] ? '原文' : '翻译'}
+                                </button>
+                                <button
+                                    onClick={() => onReply(comment.id, comment.author.username)}
+                                    className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-blue-500 transition-colors"
+                                >
+                                    <Reply className="w-3.5 h-3.5" />
+                                    <span>回复</span>
+                                </button>
+                            </div>
 
                             {/* 回复列表 */}
                             {comment.replies && comment.replies.length > 0 && (
@@ -120,16 +157,46 @@ export const PostCommentShow = ({ postId, onReply }: PostCommentShowProps) => {
                                                     </span>
                                                 </div>
                                                 <p className="text-xs text-gray-700 break-words mb-1">
-                                                    {reply.content}
+                                                    {translatedComments[reply.id] || reply.content}
                                                 </p>
-                                                {/* 回复的回复按钮 */}
-                                                <button
-                                                    onClick={() => onReply(comment.id, reply.author.username)}
-                                                    className="inline-flex items-center gap-1 text-[10px] text-gray-400 hover:text-blue-500 transition-colors"
-                                                >
-                                                    <Reply className="w-3 h-3" />
-                                                    <span>回复</span>
-                                                </button>
+                                                {/* 翻译和回复按钮 */}
+                                                <div className="flex items-center gap-3">
+                                                    <button
+                                                        onClick={() => {
+                                                            // 如果已经翻译过，则恢复原文
+                                                            if (translatedComments[reply.id]) {
+                                                                setTranslatedComments(prev => {
+                                                                    const newState = { ...prev };
+                                                                    delete newState[reply.id];
+                                                                    return newState;
+                                                                });
+                                                            } else {
+                                                                // 否则进行翻译
+                                                                translateMutation.mutate(
+                                                                    { text: reply.content, targetLang: 'zh' },
+                                                                    {
+                                                                        onSuccess: (data) => {
+                                                                            setTranslatedComments(prev => ({
+                                                                                ...prev,
+                                                                                [reply.id]: data.translatedText
+                                                                            }));
+                                                                        }
+                                                                    }
+                                                                );
+                                                            }
+                                                        }}
+                                                        className="text-[10px] text-gray-400 hover:text-blue-500 transition-colors"
+                                                    >
+                                                        {translatedComments[reply.id] ? '原文' : '翻译'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => onReply(comment.id, reply.author.username)}
+                                                        className="inline-flex items-center gap-1 text-[10px] text-gray-400 hover:text-blue-500 transition-colors"
+                                                    >
+                                                        <Reply className="w-3 h-3" />
+                                                        <span>回复</span>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}

@@ -9,7 +9,6 @@ import { LikesButton } from '@/modules/likes/components/likes-button';
 import { FavouritesButton } from '@/modules/favourites/component/favourites-button';
 import { ShowMore } from '../showmore/showmore';
 import { HomeContentShare } from './home-content-share';
-import { TranslateButton } from '@/modules/ai/translate/translate-button';
 import { useState } from 'react';
 
 interface TextContentCardProps {
@@ -43,16 +42,59 @@ export const HomeContentCard = ({
   onLikeChange,
   onFavoriteChange,
 }: TextContentCardProps) => {
+  const [translatedTitle, setTranslatedTitle] = useState<string | null>(null);
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
   const [isShowingTranslation, setIsShowingTranslation] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
 
-  const handleTranslated = (translated: string) => {
-    setTranslatedContent(translated);
-    setIsShowingTranslation(true);
+  const handleTranslate = async () => {
+    if (isTranslating) return;
+    
+    setIsTranslating(true);
+    try {
+      // 分别翻译标题和内容
+      const [titleResponse, contentResponse] = await Promise.all([
+        fetch('/api/trpc/ai.translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            json: { text: title, targetLang: 'zh' }
+          })
+        }),
+        fetch('/api/trpc/ai.translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            json: { text: content, targetLang: 'zh' }
+          })
+        })
+      ]);
+      
+      const [titleResult, contentResult] = await Promise.all([
+        titleResponse.json(),
+        contentResponse.json()
+      ]);
+      
+      if (titleResult.result?.data?.json?.translatedText) {
+        setTranslatedTitle(titleResult.result.data.json.translatedText);
+      }
+      
+      if (contentResult.result?.data?.json?.translatedText) {
+        setTranslatedContent(contentResult.result.data.json.translatedText);
+      }
+      
+      if (titleResult.result?.data?.json?.translatedText && contentResult.result?.data?.json?.translatedText) {
+        setIsShowingTranslation(true);
+      }
+    } catch (error) {
+      console.error('翻译失败:', error);
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   const toggleTranslation = () => {
-    if (translatedContent) {
+    if (translatedContent && translatedTitle) {
       setIsShowingTranslation(!isShowingTranslation);
     }
   };
@@ -63,7 +105,7 @@ export const HomeContentCard = ({
       {/* 标题 */}
     <Link href={`/post/${id}`}>
       <h3 className="text-[20px] font-medium mb-3 leading-relaxed pl-2">
-        {title}
+        {isShowingTranslation && translatedTitle ? translatedTitle : title}
       </h3>
     </Link>
     
@@ -98,15 +140,16 @@ export const HomeContentCard = ({
               {isShowingTranslation && translatedContent ? translatedContent : content}
             </p>
             <div className="flex flex-col gap-1 flex-shrink-0">
-              <TranslateButton 
-                text={content}
-                targetLang="zh"
-                onTranslated={handleTranslated}
+              <Button
                 variant="ghost"
                 size="sm"
+                onClick={handleTranslate}
+                disabled={isTranslating}
                 className="h-7 px-2"
-              />
-              {translatedContent && (
+              >
+                {isTranslating ? '翻译中...' : '翻译'}
+              </Button>
+              {translatedContent && translatedTitle && (
                 <Button
                   variant="ghost"
                   size="sm"
