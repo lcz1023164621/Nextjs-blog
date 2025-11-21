@@ -1,4 +1,4 @@
-此项目基于nextjs开发，使用shadcn作为组件库，neon postgresql和drizzleorm进行数据库管理,trpc进行数据交互，使用clerk进行身份验证
+此项目基于nextjs开发，使用shadcn作为组件库，neon postgresql和drizzleorm进行数据库管理,trpc进行数据交互，使用clerk进行身份验证,调用deepseek api集成翻译功能
 
 ## Getting Started
 安装nodejs环境，最好在v19以上 [https://nodejs.org/zh-cn](https://nodejs.org/zh-cn)<br><br>
@@ -11,12 +11,15 @@ bun add
 在项目根目录中创建.env.local文件<br><br>
 获取neon密钥[https://neon.com](https://neon.com),创建新项目后打开dashboard并点击connection，获取其中的密钥<br><br>
 之后获取clerk密钥[https://clerk.com](https://clerk.com),创建新项目后，打开Configure后找到API keys，获取其中的密钥<br><br>
+获取deepseek api的密钥[https://api-docs.deepseek.com/](https://api-docs.deepseek.com/)<br><br>
 该项目中设置密钥名为<br>
 ### .env.local
 ```env
 CLERK_SECRET_KEY=
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 DATABASE_URL=
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_API_KEY=
 ```
 <br>更新数据库<br>
 ```bash
