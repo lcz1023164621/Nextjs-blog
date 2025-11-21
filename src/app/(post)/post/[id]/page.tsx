@@ -22,8 +22,6 @@ export default async function PostPage({ params }: PostPageProps) {
     }
     
     return (
-        <div>
-            <PostView post={post.post} />
-        </div>
+        <PostView post={post.post} />
     )
 }

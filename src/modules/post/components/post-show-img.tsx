@@ -24,27 +24,27 @@ export const PostShowImg = ({ post }: { post: Post }) => {
   const showFallback = displayImages.length === 0;
 
   return (
-    <div className="relative w-full h-screen flex items-center justify-center bg-gray-100 group p-4">
-      <div className="relative w-full h-full flex items-center justify-center bg-gray-200 rounded-2xl overflow-hidden">
+    <div className="relative w-full h-full flex items-center justify-center bg-gray-50 group overflow-y-auto">
+      <div className="relative w-full flex items-center justify-center py-4">
         {showFallback ? (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full flex items-center justify-center py-20">
             <div className="w-64 h-64 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center text-white text-9xl font-semibold">
               {post.author.username.charAt(0).toUpperCase()}
             </div>
           </div>
         ) : (
-          <Carousel className="w-full h-full">
-            <CarouselContent className="h-full">
+          <Carousel className="w-full">
+            <CarouselContent>
               {displayImages.map((image, index) => (
-                <CarouselItem key={image.id} className="h-full flex items-center justify-center">
-                  <div className="relative w-full h-full flex items-center justify-center">
+                <CarouselItem key={image.id} className="flex justify-center">
+                  <div className="relative w-full">
                     <Image
                       src={image.imageUrl}
                       alt={`${post.title} - 图片 ${index + 1}`}
                       width={0}
                       height={0}
                       sizes="100vw"
-                      className="w-full h-auto max-h-full object-contain"
+                      className="w-full h-auto"
                       priority={index === 0}
                     />
                   </div>
