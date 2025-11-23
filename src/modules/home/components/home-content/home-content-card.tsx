@@ -36,6 +36,7 @@ interface TextContentCardProps {
   }>;
   onLikeChange?: (isLiked: boolean) => void;
   onFavoriteChange?: (isFavorited: boolean) => void;
+  onDeleteSuccess?: () => void;
 }
 
 export type { TextContentCardProps };
@@ -50,6 +51,7 @@ export const HomeContentCard = ({
   tags,
   onLikeChange,
   onFavoriteChange,
+  onDeleteSuccess,
 }: TextContentCardProps) => {
   const [translatedTitle, setTranslatedTitle] = useState<string | null>(null);
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
@@ -224,7 +226,7 @@ export const HomeContentCard = ({
         <span className="font-medium text-gray-900 ml-auto">作者：{author.name}</span>
 
         {/* 更多 */}
-        <ShowMore />
+        <ShowMore postId={id} onDeleteSuccess={onDeleteSuccess} />
       </div>
     </Card>
   );

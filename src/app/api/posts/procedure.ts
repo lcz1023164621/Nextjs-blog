@@ -770,6 +770,61 @@ export const postRouter = createTRPCRouter({
           message: '获取标签文章失败',
         });
       }
+    }),
+
+  // 检查文章是否属于当前用户 - 受保护的路由
+  checkPostOwnership: protectedProcedure
+    .input(
+      z.object({
+        postId: z.string().uuid('无效的文章ID'),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { postId } = input;
+      const clerkId = ctx.userId;
+
+      try {
+        // 通过 clerkId 查找数据库中的用户
+        const user = await db.query.users.findFirst({
+          where: eq(users.clerkId, clerkId),
+        });
+
+        if (!user) {
+          return {
+            success: true,
+            isOwner: false,
+          };
+        }
+
+        // 查询文章是否存在
+        const post = await db.query.posts.findFirst({
+          where: eq(posts.id, postId),
+        });
+
+        if (!post) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '文章不存在',
+          });
+        }
+
+        // 检查是否为文章作者
+        return {
+          success: true,
+          isOwner: post.authorId === user.id,
+        };
+      } catch (error) {
+        console.error('检查文章所有权失败:', error);
+        
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '检查文章所有权失败',
+        });
+      }
     })
 });
 

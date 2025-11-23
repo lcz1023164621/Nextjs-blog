@@ -96,6 +96,12 @@ export const HomeContent = () => {
         )
     }, [])
 
+    // 处理文章删除
+    const handleDeleteSuccess = useCallback((postId: string) => {
+        // 从列表中移除已删除的文章
+        setAllPosts(prev => prev.filter(post => post.id !== postId))
+    }, [])
+
     // Intersection Observer 回调
     const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
         const [target] = entries
@@ -204,6 +210,7 @@ export const HomeContent = () => {
                     tags={post.tags}
                     onLikeChange={(isLiked) => handleLikeChange(post.id, isLiked)}
                     onFavoriteChange={(isFavorited) => handleFavoriteChange(post.id, isFavorited)}
+                    onDeleteSuccess={() => handleDeleteSuccess(post.id)}
                 />
             ))}
 
