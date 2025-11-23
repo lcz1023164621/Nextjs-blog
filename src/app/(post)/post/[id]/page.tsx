@@ -2,9 +2,9 @@ import { PostView } from "@/modules/post/views/post-view"
 import { trpc } from "@/trpc/server";
 
 interface PostPageProps {
-    params: {
+    params: Promise<{
         id: string
-    }
+    }>
 }
 
 export default async function PostPage({ params }: PostPageProps) {
