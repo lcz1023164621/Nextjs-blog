@@ -1,7 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
+import { put } from '@vercel/blob';
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,36 +41,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
     // 生成唯一文件名
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(2, 15);
-    const ext = path.extname(file.name);
-    const filename = `${timestamp}-${randomStr}${ext}`;
+    const filename = `${timestamp}-${randomStr}-${file.name}`;
 
-    // 创建上传目录
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-    try {
-      await mkdir(uploadDir, { recursive: true });
-    } catch {
-      // 目录已存在，忽略错误
-    }
-
-    // 保存文件
-    const filepath = path.join(uploadDir, filename);
-    await writeFile(filepath, buffer);
-
-    // 返回可访问的 URL - 使用完整 URL
-    const protocol = request.headers.get('x-forwarded-proto') || 'http';
-    const host = request.headers.get('host') || 'localhost:3000';
-    const url = `${protocol}://${host}/uploads/${filename}`;
+    // 上传到 Vercel Blob
+    const blob = await put(filename, file, {
+      access: 'public',
+    });
 
     return NextResponse.json({
       success: true,
-      url,
-      filename,
+      url: blob.url,
+      filename: blob.pathname,
     });
   } catch (error) {
     console.error('文件上传失败:', error);
