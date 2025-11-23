@@ -4,6 +4,7 @@ import { trpc } from "@/trpc/client"
 import { HomeContentCard } from "./home-content-card"
 import { useEffect, useState, useRef, useCallback } from "react"
 import { Spinner } from "@/components/ui/spinner"
+import { useUser } from "@clerk/nextjs"
 
 const PAGE_SIZE = 10 // 每页加载数量
 
@@ -37,7 +38,10 @@ export const HomeContent = () => {
     const [allPosts, setAllPosts] = useState<Post[]>([])
     const [offset, setOffset] = useState(0)
     const [hasMore, setHasMore] = useState(true)
+    const [isRefreshing, setIsRefreshing] = useState(false)
     const observerTarget = useRef<HTMLDivElement>(null)
+    const { isSignedIn } = useUser()
+    const utils = trpc.useUtils()
     
     // 获取文章列表
     const { data, isLoading, error } = trpc.post.getPosts.useQuery(
@@ -57,6 +61,7 @@ export const HomeContent = () => {
                 // offset=0 时总是重置数据（首次加载或刷新）
                 setAllPosts(data.posts)
                 setHasMore(data.posts.length >= PAGE_SIZE)
+                setIsRefreshing(false)
             } else {
                 // 分页加载，累加数据并去重
                 setAllPosts(prev => {
@@ -99,6 +104,17 @@ export const HomeContent = () => {
         }
     }, [isLoading, hasMore])
 
+    // 监听登录状态变化，重新获取数据
+    useEffect(() => {
+        if (!mounted) return
+        
+        // 登录状态改变时重置数据并重新加载
+        setIsRefreshing(true)
+        setOffset(0)
+        setAllPosts([])
+        utils.post.getPosts.invalidate()
+    }, [isSignedIn, mounted, utils.post.getPosts])
+
     // 设置 Intersection Observer
     useEffect(() => {
         setMounted(true)
@@ -135,8 +151,8 @@ export const HomeContent = () => {
         )
     }
 
-    // 初次加载
-    if (isLoading && allPosts.length === 0) {
+    // 初次加载或刷新时显示骨架屏
+    if ((isLoading && allPosts.length === 0) || isRefreshing) {
         return (
             <div className="space-y-4">
                 {[1, 2, 3].map((i) => (

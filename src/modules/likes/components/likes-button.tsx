@@ -5,6 +5,8 @@ import { trpc } from '@/trpc/client';
 import { Heart } from 'lucide-react';
 import { toast } from "sonner";
 import { useState, useEffect } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 
 interface LikesButtonProps {
   postId: string;
@@ -16,6 +18,8 @@ interface LikesButtonProps {
 export const LikesButton = ({ postId, initialIsLiked, likesCount, onLikeChange }: LikesButtonProps) => {
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const utils = trpc.useUtils();
+  const { isSignedIn } = useUser();
+  const router = useRouter();
 
   // 同步外部状态变化
   useEffect(() => {
@@ -51,6 +55,11 @@ export const LikesButton = ({ postId, initialIsLiked, likesCount, onLikeChange }
   });
 
   const handleLikeClick = () => {
+    if (!isSignedIn) {
+      toast.error('请先登录');
+      router.push('/sign-in');
+      return;
+    }
     toggleLikeMutation.mutate({ postId });
   };
 

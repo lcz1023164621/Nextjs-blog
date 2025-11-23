@@ -329,7 +329,13 @@ export const postRouter = createTRPCRouter({
             const commentsCount = Number(commentsCountResult[0]?.count || 0);
 
             return {
-              ...post,
+              id: post.id,
+              title: post.title,
+              content: post.content,
+              createdAt: post.createdAt,
+              updatedAt: post.updatedAt,
+              author: post.author,
+              images: post.images,
               isLiked,
               isFavorited,
               likesCount,

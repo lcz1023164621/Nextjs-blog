@@ -5,6 +5,8 @@ import { trpc } from '@/trpc/client';
 import { Bookmark } from 'lucide-react';
 import { toast } from "sonner";
 import { useState, useEffect } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 
 interface FavouritesButtonProps {
   postId: string;
@@ -16,6 +18,8 @@ interface FavouritesButtonProps {
 export const FavouritesButton = ({ postId, initialIsFavorited, favoritesCount, onFavoriteChange }: FavouritesButtonProps) => {
   const [isFavorited, setIsFavorited] = useState(initialIsFavorited);
   const utils = trpc.useUtils();
+  const { isSignedIn } = useUser();
+  const router = useRouter();
 
   // 同步外部状态变化
   useEffect(() => {
@@ -51,6 +55,11 @@ export const FavouritesButton = ({ postId, initialIsFavorited, favoritesCount, o
   });
 
   const handleFavoriteClick = () => {
+    if (!isSignedIn) {
+      toast.error('请先登录');
+      router.push('/sign-in');
+      return;
+    }
     toggleFavoriteMutation.mutate({ postId });
   };
 

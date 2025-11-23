@@ -11,6 +11,9 @@ import { ShowMore } from '../showmore/showmore';
 import { HomeContentShare } from './home-content-share';
 import { Label } from '@/modules/ai/label/label';
 import { useState } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface TextContentCardProps {
   id: string;
@@ -52,6 +55,8 @@ export const HomeContentCard = ({
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
   const [isShowingTranslation, setIsShowingTranslation] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
+  const { isSignedIn } = useUser();
+  const router = useRouter();
 
   const handleTranslate = async () => {
     if (isTranslating) return;
@@ -110,7 +115,7 @@ export const HomeContentCard = ({
     <Card className="p-4 hover:bg-accent/5 transition-colors border-b rounded-lg">
       {/* 标题 */}
     <Link href={`/post/${id}`}>
-      <h3 className="text-[20px] font-medium mb-3 leading-relaxed pl-2">
+      <h3 className="text-[20px] font-medium mb-3 leading-relaxed">
         {isShowingTranslation && translatedTitle ? translatedTitle : title}
       </h3>
     </Link>
@@ -172,7 +177,7 @@ export const HomeContentCard = ({
 
       {/* 标签 */}
       {tags && tags.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-3 pl-2">
+        <div className="flex flex-wrap gap-2 mt-3">
           {tags.map(tag => (
             <Label key={tag.id} name={tag.name} />
           ))}
@@ -193,6 +198,12 @@ export const HomeContentCard = ({
         <Button 
           variant="ghost" 
           size="sm" 
+          onClick={() => {
+            if (!isSignedIn) {
+              toast.error('请先登录');
+              router.push('/sign-in');
+            }
+          }}
           className="gap-1.5 h-7 px-2.5 hover:bg-gray-50 text-gray-600"
         >
           <MessageSquare className="w-[14px] h-[14px]" />
