@@ -27,13 +27,13 @@ export const PostView = ({ post }: { post: Post }) => {
 
     return(
         <div className="fixed inset-0 top-[73px] flex">
-            {/* 左侧：图片展示区 - 占据左侧空间，固定不可滚动 */}
-            <div className="flex-1 overflow-hidden">
+            {/* 左侧：图片展示区 - 占据屏幕一半 */}
+            <div className="w-2/3 overflow-hidden">
                 <PostShowImg post={post} />
             </div>
             
-            {/* 右侧：信息栏 - 固定宽度 */}
-            <div className="w-96 bg-white flex flex-col h-full">
+            {/* 右侧：信息栏 - 占据屏幕一半 */}
+            <div className="w-1/3 bg-white flex flex-col h-full">
                 {/* 固定在顶部的标题 */}
                 <div className="shrink-0 bg-white border-b border-gray-200 z-40">
                     <PostTitle post={post} />
@@ -54,7 +54,7 @@ export const PostView = ({ post }: { post: Post }) => {
                 
                 {/* 固定在底部的评论框 */}
                 <div className="shrink-0 bg-white border-t z-40">
-                    <PostComment 
+                    <PostComment
                         postId={post.id} 
                         replyTo={replyTo}
                         onCancelReply={handleCancelReply}

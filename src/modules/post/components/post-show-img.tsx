@@ -24,42 +24,39 @@ export const PostShowImg = ({ post }: { post: Post }) => {
   const showFallback = displayImages.length === 0;
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center bg-gray-50 group overflow-y-auto">
-      <div className="relative w-full flex items-center justify-center py-4">
-        {showFallback ? (
-          <div className="w-full flex items-center justify-center py-20">
-            <div className="w-64 h-64 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center text-white text-9xl font-semibold">
-              {post.author.username.charAt(0).toUpperCase()}
-            </div>
-          </div>
-        ) : (
-          <Carousel className="w-full">
-            <CarouselContent>
-              {displayImages.map((image, index) => (
-                <CarouselItem key={image.id} className="flex justify-center">
-                  <div className="relative w-full">
-                    <Image
-                      src={image.imageUrl}
-                      alt={`${post.title} - 图片 ${index + 1}`}
-                      width={0}
-                      height={0}
-                      sizes="100vw"
-                      className="w-full h-auto"
-                      priority={index === 0}
-                    />
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            {displayImages.length > 1 && (
-              <>
-                <CarouselPrevious className="left-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <CarouselNext className="right-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </>
-            )}
-          </Carousel>
-        )}
-      </div>
+    <div className="relative w-full h-full flex items-center justify-center bg-gray-50 group">
+      {showFallback ? (
+        <div className="aspect-square max-h-[calc(100vh-73px)] max-w-full rounded-full bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center text-white text-9xl font-semibold">
+          {post.author.username.charAt(0).toUpperCase()}
+        </div>
+      ) : (
+        <Carousel className="w-full h-full">
+          <CarouselContent className="h-full items-center">
+            {displayImages.map((image, index) => (
+              <CarouselItem key={image.id} className="flex justify-center items-center">
+                <div className="relative" style={{ 
+                  width: 'min(calc(100vh - 73px), 50vw)',
+                  height: 'min(calc(100vh - 73px), 50vw)'
+                }}>
+                  <Image
+                    src={image.imageUrl}
+                    alt={`${post.title} - 图片 ${index + 1}`}
+                    fill
+                    className="object-contain"
+                    priority={index === 0}
+                  />
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          {displayImages.length > 1 && (
+            <>
+              <CarouselPrevious className="left-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <CarouselNext className="right-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </>
+          )}
+        </Carousel>
+      )}
     </div>
   )
 }
