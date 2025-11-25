@@ -6,6 +6,7 @@ import { CommentRouter } from '@/app/api/comments/precedure';
 import { likeRouter } from '@/app/api/likes/procedure';
 import { favoritesRouter } from '@/app/api/favourites/procedure';
 import { aiRouter } from '@/app/api/ai/precedure';
+import { followRouter } from '@/app/api/follow/procedure';
 export const appRouter = createTRPCRouter({
   hello: baseProcedure
     .input(
@@ -24,6 +25,7 @@ export const appRouter = createTRPCRouter({
     like: likeRouter,
     favorites: favoritesRouter,
     ai: aiRouter,
+    follow: followRouter,
 });
 // export type definition of API
 export type AppRouter = typeof appRouter;

@@ -238,6 +238,68 @@ export const userRouter = createTRPCRouter({
         });
       }
     }),
+
+  // 根据用户ID获取用户信息及统计 - 公开路由
+  getUserById: baseProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid('无效的用户ID'),
+      })
+    )
+    .query(async ({ input }) => {
+      const { userId } = input;
+
+      try {
+        // 查找用户
+        const user = await db.query.users.findFirst({
+          where: eq(users.id, userId),
+          columns: {
+            id: true,
+            username: true,
+            avatar: true,
+            bio: true,
+            email: true,
+            createdAt: true,
+          },
+        });
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '用户不存在',
+          });
+        }
+
+        // 获取关注数和粉丝数
+        const { follows } = await import('@/db/schema');
+        
+        const followingList = await db.query.follows.findMany({
+          where: eq(follows.followerId, userId),
+        });
+
+        const followersList = await db.query.follows.findMany({
+          where: eq(follows.followingId, userId),
+        });
+
+        return {
+          success: true,
+          ...user,
+          followingCount: followingList.length,
+          followersCount: followersList.length,
+        };
+      } catch (error) {
+        console.error('获取用户信息失败:', error);
+        
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '获取用户信息失败',
+        });
+      }
+    }),
 });
 
 // 导出类型

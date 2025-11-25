@@ -12,12 +12,13 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
-interface HomeContentShareProps {
+interface PostShareProps {
   postId: string;
   title: string;
+  variant?: 'default' | 'compact';
 }
 
-export const HomeContentShare = ({ postId, title }: HomeContentShareProps) => {
+export const PostShare = ({ postId, title, variant = 'default' }: PostShareProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   // 获取文章的完整 URL
@@ -125,15 +126,24 @@ export const HomeContentShare = ({ postId, title }: HomeContentShareProps) => {
 
   return (
     <>
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        className="gap-1.5 h-7 px-2.5 hover:bg-gray-50 text-gray-600"
-        onClick={() => setIsOpen(true)}
-      >
-        <Share2 className="w-[14px] h-[14px]" />
-        分享
-      </Button>
+      {variant === 'compact' ? (
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="gap-1.5 h-7 px-2.5 hover:bg-gray-50 text-gray-600"
+          onClick={() => setIsOpen(true)}
+        >
+          <Share2 className="w-[14px] h-[14px]" />
+          分享
+        </Button>
+      ) : (
+        <button 
+          className="flex items-center gap-1 hover:text-green-500 transition-colors"
+          onClick={() => setIsOpen(true)}
+        >
+          <Share2 className="w-4 h-4" />
+        </button>
+      )}
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-md">

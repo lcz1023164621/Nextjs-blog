@@ -8,8 +8,9 @@ import Link from 'next/link';
 import { LikesButton } from '@/modules/likes/components/likes-button';
 import { FavouritesButton } from '@/modules/favourites/component/favourites-button';
 import { ShowMore } from '../showmore/showmore';
-import { HomeContentShare } from './home-content-share';
+import { PostShare } from '@/components/post-share/post-share';
 import { Label } from '@/modules/ai/label/label';
+import { AuthInformation } from '../../../../components/auth-information/auth-information';
 import { useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
@@ -21,7 +22,10 @@ interface TextContentCardProps {
   content: string;
   thumbnail?: string;
   author: {
+    id: string;
     name: string;
+    avatar?: string | null;
+    email?: string | null;
   };
   stats: {
     comments: number;
@@ -189,44 +193,58 @@ export const HomeContentCard = ({
       {/* 底部互动栏 */}
       <div className="flex items-center gap-5 mt-4 text-[13px] text-gray-500">
         {/* 喜欢 */}
-        <LikesButton 
-          postId={id} 
-          initialIsLiked={stats.isLiked || false}
-          likesCount={stats.likesCount}
-          onLikeChange={onLikeChange} 
-        />
+        <div className="flex items-center">
+          <LikesButton 
+            postId={id} 
+            initialIsLiked={stats.isLiked || false}
+            likesCount={stats.likesCount}
+            onLikeChange={onLikeChange} 
+          />
+        </div>
 
         {/* 评论 */}
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => {
-            if (!isSignedIn) {
-              toast.error('请先登录');
-              router.push('/sign-in');
-            }
-          }}
-          className="gap-1.5 h-7 px-2.5 hover:bg-gray-50 text-gray-600"
-        >
-          <MessageSquare className="w-[14px] h-[14px]" />
-          {stats.comments} 条评论
-        </Button>
+        <div className="flex items-center">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              if (!isSignedIn) {
+                toast.error('请先登录');
+                router.push('/sign-in');
+              }
+            }}
+            className="gap-1.5 h-7 px-2.5 hover:bg-gray-50 text-gray-600"
+          >
+            <MessageSquare className="w-[14px] h-[14px]" />
+            {stats.comments} 条评论
+          </Button>
+        </div>
 
         {/* 分享 */}
-        <HomeContentShare postId={id} title={title} />
+        <div className="flex items-center">
+          <PostShare postId={id} title={title} variant="compact" />
+        </div>
 
         {/* 收藏 */}
-        <FavouritesButton 
-          postId={id} 
-          initialIsFavorited={stats.isFavorited || false}
-          favoritesCount={stats.favoritesCount}
-          onFavoriteChange={onFavoriteChange} 
-        />
+        <div className="flex items-center">
+          <FavouritesButton 
+            postId={id} 
+            initialIsFavorited={stats.isFavorited || false}
+            favoritesCount={stats.favoritesCount}
+            onFavoriteChange={onFavoriteChange} 
+          />
+        </div>
 
-        <span className="font-medium text-gray-900 ml-auto">作者：{author.name}</span>
+        {/* 作者信息 */}
+        <div className='ml-auto'>
+          <AuthInformation author={author} />
+        </div>
+        
 
         {/* 更多 */}
-        <ShowMore postId={id} onDeleteSuccess={onDeleteSuccess} />
+        <div className="flex items-center">
+          <ShowMore postId={id} onDeleteSuccess={onDeleteSuccess} />
+        </div>
       </div>
     </Card>
   );

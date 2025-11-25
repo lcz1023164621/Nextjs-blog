@@ -1,10 +1,11 @@
 "use client"
 
 import { UserButton } from "@clerk/nextjs"
-import { Heart, Star, MessageCircle, Share2, Send, X } from "lucide-react"
+import { Heart, Star, MessageCircle, Send, X } from "lucide-react"
 import { useState, useEffect } from "react"
 import { trpc } from "@/trpc/client"
 import { toast } from "sonner"
+import { PostShare } from "@/components/post-share/post-share"
 
 interface ReplyTo {
     commentId: string;
@@ -13,6 +14,7 @@ interface ReplyTo {
 
 interface PostCommentProps {
     postId: string;
+    postTitle: string;
     replyTo: ReplyTo | null;
     onCancelReply: () => void;
     likesCount: number;
@@ -23,7 +25,8 @@ interface PostCommentProps {
 }
 
 export const PostComment = ({ 
-    postId, 
+    postId,
+    postTitle, 
     replyTo, 
     onCancelReply, 
     likesCount, 
@@ -175,9 +178,7 @@ export const PostComment = ({
                 </button>
 
                 {/* 分享 */}
-                <button className="flex items-center gap-1 hover:text-green-500 transition-colors">
-                    <Share2 className="w-4 h-4" />
-                </button>
+                <PostShare postId={postId} title={postTitle} />
             </div>
         </div>
     )

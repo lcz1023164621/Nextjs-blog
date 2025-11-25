@@ -55,7 +55,8 @@ export const PostView = ({ post }: { post: Post }) => {
                 {/* 固定在底部的评论框 */}
                 <div className="shrink-0 bg-white border-t z-40">
                     <PostComment
-                        postId={post.id} 
+                        postId={post.id}
+                        postTitle={post.title} 
                         replyTo={replyTo}
                         onCancelReply={handleCancelReply}
                         likesCount={post.likesCount || 0}

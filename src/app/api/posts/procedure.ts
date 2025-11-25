@@ -252,6 +252,7 @@ export const postRouter = createTRPCRouter({
                 id: true,
                 username: true,
                 avatar: true,
+                email: true,
               },
             },
             images: {
@@ -379,6 +380,7 @@ export const postRouter = createTRPCRouter({
                 id: true,
                 username: true,
                 avatar: true,
+                email: true,
               },
             },
             images: {
@@ -667,6 +669,7 @@ export const postRouter = createTRPCRouter({
                     id: true,
                     username: true,
                     avatar: true,
+                    email: true,
                   },
                 },
                 images: {

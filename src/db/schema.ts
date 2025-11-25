@@ -99,6 +99,55 @@ export const postTags = pgTable('post_tags', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+/* ===================== 关注表 ===================== */
+// 用户之间的关注关系
+export const follows = pgTable('follows', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  followerId: uuid('follower_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  followingId: uuid('following_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+/* ===================== 聊天会话表 ===================== */
+// 两个用户之间的聊天会话
+export const conversations = pgTable('conversations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/* ===================== 会话参与者表 ===================== */
+// 会话中的参与者（支持未来扩展群聊）
+export const conversationParticipants = pgTable('conversation_participants', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  conversationId: uuid('conversation_id')
+    .notNull()
+    .references(() => conversations.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  joinedAt: timestamp('joined_at').defaultNow().notNull(),
+});
+
+/* ===================== 消息表 ===================== */
+// 会话中的消息
+export const messages = pgTable('messages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  conversationId: uuid('conversation_id')
+    .notNull()
+    .references(() => conversations.id, { onDelete: 'cascade' }),
+  senderId: uuid('sender_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  content: text('content').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 /* ===================== 关系定义 ===================== */
 // 用户 - 文章
 export const usersRelations = relations(users, ({ many }) => ({
@@ -106,6 +155,10 @@ export const usersRelations = relations(users, ({ many }) => ({
   comments: many(comments), // 一个用户有多个评论
   postLikes: many(postLikes), // 一个用户可以点赞多篇文章
   postFavorites: many(postFavorites), // 一个用户可以收藏多篇文章
+  followers: many(follows, { relationName: 'following' }), // 关注该用户的人
+  following: many(follows, { relationName: 'follower' }), // 该用户关注的人
+  conversationParticipants: many(conversationParticipants), // 用户参与的会话
+  messages: many(messages), // 用户发送的消息
 }));
 
 // 标签 - 文章
@@ -186,6 +239,50 @@ export const postFavoritesRelations = relations(postFavorites, ({ one }) => ({
   }),
   user: one(users, {
     fields: [postFavorites.userId],
+    references: [users.id],
+  }),
+}));
+
+// 关注 - 用户 关注关系属于两个用户
+export const followsRelations = relations(follows, ({ one }) => ({
+  follower: one(users, {
+    fields: [follows.followerId],
+    references: [users.id],
+    relationName: 'follower',
+  }),
+  following: one(users, {
+    fields: [follows.followingId],
+    references: [users.id],
+    relationName: 'following',
+  }),
+}));
+
+// 会话 - 参与者 / 消息
+export const conversationsRelations = relations(conversations, ({ many }) => ({
+  participants: many(conversationParticipants), // 一个会话有多个参与者
+  messages: many(messages), // 一个会话有多条消息
+}));
+
+// 会话参与者 - 会话 / 用户
+export const conversationParticipantsRelations = relations(conversationParticipants, ({ one }) => ({
+  conversation: one(conversations, {
+    fields: [conversationParticipants.conversationId],
+    references: [conversations.id],
+  }),
+  user: one(users, {
+    fields: [conversationParticipants.userId],
+    references: [users.id],
+  }),
+}));
+
+// 消息 - 会话 / 发送者
+export const messagesRelations = relations(messages, ({ one }) => ({
+  conversation: one(conversations, {
+    fields: [messages.conversationId],
+    references: [conversations.id],
+  }),
+  sender: one(users, {
+    fields: [messages.senderId],
     references: [users.id],
   }),
 }));

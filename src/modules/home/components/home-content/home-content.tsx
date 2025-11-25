@@ -22,6 +22,7 @@ type Post = {
         id: string
         username: string
         avatar: string | null
+        email: string | null
     }
     images: {
         id: string
@@ -198,7 +199,10 @@ export const HomeContent = () => {
                     content={post.content}
                     thumbnail={post.images[0]?.imageUrl || post.author.avatar || undefined}
                     author={{
+                        id: post.author.id,
                         name: post.author.username,
+                        avatar: post.author.avatar,
+                        email: post.author.email,
                     }}
                     stats={{
                         comments: post.commentsCount,
