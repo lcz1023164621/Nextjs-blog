@@ -1,12 +1,12 @@
 "use client"
 
-import { PostShowImg } from "../components/post-show-img"
+import { PostShowImg } from "../components/post-show-img/post-show-img"
 import { Post } from "@/model/post"
-import { PostTitle } from "../components/post-title"
+import { PostTitle } from "../components/post-title/post-title"
 import { useState } from "react"
-import { PostContent } from "../components/post-content"
-import { PostComment } from "../components/post-comment"
-import { PostCommentShow } from "../components/post-comment-show"
+import { PostContent } from "../components/post-content/post-content"
+import { PostComment } from "../components/post-comment/post-comment"
+import { PostCommentShow } from "../components/post-comment-show/post-comment-show"
 
 export const PostView = ({ post }: { post: Post }) => {
 
@@ -28,7 +28,7 @@ export const PostView = ({ post }: { post: Post }) => {
     return(
         <div className="fixed inset-0 top-[73px] flex">
             {/* 左侧：图片展示区 - 占据屏幕一半 */}
-            <div className="w-2/3 overflow-hidden">
+            <div className="w-2/3 flex items-center justify-center bg-gray-50">
                 <PostShowImg post={post} />
             </div>
             

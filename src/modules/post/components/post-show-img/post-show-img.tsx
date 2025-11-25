@@ -24,14 +24,17 @@ export const PostShowImg = ({ post }: { post: Post }) => {
   const showFallback = displayImages.length === 0;
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center bg-gray-50 group">
+    <div className="relative group">
       {showFallback ? (
-        <div className="aspect-square max-h-[calc(100vh-73px)] max-w-full rounded-full bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center text-white text-9xl font-semibold">
+        <div className="rounded-full bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center text-white text-9xl font-semibold" style={{
+          width: 'min(calc(100vh - 73px), 50vw)',
+          height: 'min(calc(100vh - 73px), 50vw)'
+        }}>
           {post.author.username.charAt(0).toUpperCase()}
         </div>
       ) : (
-        <Carousel className="w-full h-full">
-          <CarouselContent className="h-full items-center">
+        <Carousel className="w-auto">
+          <CarouselContent className="items-center">
             {displayImages.map((image, index) => (
               <CarouselItem key={image.id} className="flex justify-center items-center">
                 <div className="relative" style={{ 
