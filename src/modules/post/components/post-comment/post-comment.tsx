@@ -1,11 +1,12 @@
 "use client"
 
-import { UserButton } from "@clerk/nextjs"
+import { UserButton, useUser } from "@clerk/nextjs"
 import { Heart, Star, MessageCircle, Send, X } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { trpc } from "@/trpc/client"
 import { toast } from "sonner"
 import { PostShare } from "@/components/post-share/post-share"
+import { useRouter } from "next/navigation"
 
 interface ReplyTo {
     commentId: string;
@@ -37,16 +38,100 @@ export const PostComment = ({
 }: PostCommentProps) => {
     const [comment, setComment] = useState("")
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [currentIsLiked, setCurrentIsLiked] = useState(isLiked)
+    const [currentIsFavorited, setCurrentIsFavorited] = useState(isFavorited)
+    const [currentLikesCount, setCurrentLikesCount] = useState(likesCount)
+    const [currentFavoritesCount, setCurrentFavoritesCount] = useState(favoritesCount)
+    const inputRef = useRef<HTMLInputElement>(null)
 
     const utils = trpc.useUtils();
+    const { isSignedIn } = useUser();
+    const router = useRouter();
 
-    // 当回复对象改变时，更新输入框占位符
+    // 同步外部状态变化
     useEffect(() => {
-        if (replyTo) {
-            // 可以选择性地在这里添加 @用户名 到输入框
-            // setComment(`@${replyTo.username} `);
+        setCurrentIsLiked(isLiked);
+        setCurrentIsFavorited(isFavorited);
+        setCurrentLikesCount(likesCount);
+        setCurrentFavoritesCount(favoritesCount);
+    }, [isLiked, isFavorited, likesCount, favoritesCount]);
+
+    // 切换点赞 mutation
+    const toggleLikeMutation = trpc.like.toggleLike.useMutation({
+        // 乐观更新：立即更新 UI
+        onMutate: async () => {
+            const newIsLiked = !currentIsLiked;
+            setCurrentIsLiked(newIsLiked);
+            setCurrentLikesCount(prev => newIsLiked ? prev + 1 : prev - 1);
+            return { previousIsLiked: currentIsLiked, previousCount: currentLikesCount };
+        },
+        onSuccess: (data) => {
+            // 确保状态与服务器一致
+            setCurrentIsLiked(data.isLiked);
+            toast.success(data.message);
+            // 刷新文章数据
+            utils.post.getPostById.invalidate({ id: postId });
+        },
+        onError: (error, variables, context) => {
+            // 发生错误时回滚状态
+            if (context?.previousIsLiked !== undefined) {
+                setCurrentIsLiked(context.previousIsLiked);
+                setCurrentLikesCount(context.previousCount);
+            }
+            toast.error(error.message || '操作失败');
+        },
+    });
+
+    // 切换收藏 mutation
+    const toggleFavoriteMutation = trpc.favorites.toggleFavorite.useMutation({
+        // 乐观更新：立即更新 UI
+        onMutate: async () => {
+            const newIsFavorited = !currentIsFavorited;
+            setCurrentIsFavorited(newIsFavorited);
+            setCurrentFavoritesCount(prev => newIsFavorited ? prev + 1 : prev - 1);
+            return { previousIsFavorited: currentIsFavorited, previousCount: currentFavoritesCount };
+        },
+        onSuccess: (data) => {
+            // 确保状态与服务器一致
+            setCurrentIsFavorited(data.isFavorited);
+            toast.success(data.message);
+            // 刷新文章数据
+            utils.post.getPostById.invalidate({ id: postId });
+        },
+        onError: (error, variables, context) => {
+            // 发生错误时回滚状态
+            if (context?.previousIsFavorited !== undefined) {
+                setCurrentIsFavorited(context.previousIsFavorited);
+                setCurrentFavoritesCount(context.previousCount);
+            }
+            toast.error(error.message || '操作失败');
+        },
+    });
+
+    // 处理点赞
+    const handleLikeClick = () => {
+        if (!isSignedIn) {
+            toast.error('请先登录');
+            router.push('/sign-in');
+            return;
         }
-    }, [replyTo]);
+        toggleLikeMutation.mutate({ postId });
+    };
+
+    // 处理收藏
+    const handleFavoriteClick = () => {
+        if (!isSignedIn) {
+            toast.error('请先登录');
+            router.push('/sign-in');
+            return;
+        }
+        toggleFavoriteMutation.mutate({ postId });
+    };
+
+    // 处理评论按钮点击
+    const handleCommentClick = () => {
+        inputRef.current?.focus();
+    };
 
     // 创建评论的 mutation
     const createCommentMutation = trpc.comment.createComment.useMutation({
@@ -132,6 +217,7 @@ export const PostComment = ({
 
                 {/* 输入框 */}
                 <input
+                    ref={inputRef}
                     type="text"
                     placeholder={replyTo ? `回复 @${replyTo.username}...` : "说点什么..."}
                     className="flex-1 bg-transparent border-none outline-none text-xs text-gray-600 placeholder:text-gray-400"
@@ -156,23 +242,38 @@ export const PostComment = ({
             {/* 互动按钮区域 */}
             <div className="flex items-center gap-4 text-gray-500">
                 {/* 点赞 */}
-                <button className={`flex items-center gap-1 transition-colors ${
-                    isLiked ? 'text-red-500' : 'hover:text-red-500'
-                }`}>
-                    <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-                    <span className="text-xs">{likesCount}</span>
+                <button 
+                    onClick={handleLikeClick}
+                    disabled={toggleLikeMutation.isPending}
+                    className={`flex items-center gap-1 transition-colors ${
+                        currentIsLiked ? 'text-red-500' : 'hover:text-red-500'
+                    } ${toggleLikeMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                    <Heart className={`w-4 h-4 ${
+                        currentIsLiked ? 'fill-current' : ''
+                    }`} />
+                    <span className="text-xs">{currentLikesCount}</span>
                 </button>
 
                 {/* 收藏 */}
-                <button className={`flex items-center gap-1 transition-colors ${
-                    isFavorited ? 'text-yellow-500' : 'hover:text-yellow-500'
-                }`}>
-                    <Star className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`} />
-                    <span className="text-xs">{favoritesCount}</span>
+                <button 
+                    onClick={handleFavoriteClick}
+                    disabled={toggleFavoriteMutation.isPending}
+                    className={`flex items-center gap-1 transition-colors ${
+                        currentIsFavorited ? 'text-yellow-500' : 'hover:text-yellow-500'
+                    } ${toggleFavoriteMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                    <Star className={`w-4 h-4 ${
+                        currentIsFavorited ? 'fill-current' : ''
+                    }`} />
+                    <span className="text-xs">{currentFavoritesCount}</span>
                 </button>
 
                 {/* 评论 */}
-                <button className="flex items-center gap-1 hover:text-blue-500 transition-colors">
+                <button 
+                    onClick={handleCommentClick}
+                    className="flex items-center gap-1 hover:text-blue-500 transition-colors"
+                >
                     <MessageCircle className="w-4 h-4" />
                     <span className="text-xs">{commentsCount}</span>
                 </button>

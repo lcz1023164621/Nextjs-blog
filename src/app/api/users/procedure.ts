@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { baseProcedure, createTRPCRouter, protectedProcedure } from '@/trpc/init';
 import { db } from '@/db';
 import { users, posts } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql, inArray } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 
 export const userRouter = createTRPCRouter({
@@ -169,9 +169,43 @@ export const userRouter = createTRPCRouter({
           });
         }
 
+        // 获取关注数和粉丝数
+        const { follows, postLikes } = await import('@/db/schema');
+        
+        const followingList = await db.query.follows.findMany({
+          where: eq(follows.followerId, user.id),
+        });
+
+        const followersList = await db.query.follows.findMany({
+          where: eq(follows.followingId, user.id),
+        });
+
+        // 获取用户所有文章收到的总点赞数
+        const userPostsResult = await db.query.posts.findMany({
+          where: eq(posts.authorId, user.id),
+          columns: {
+            id: true,
+          },
+        });
+
+        let totalLikes = 0;
+        if (userPostsResult.length > 0) {
+          const postIds = userPostsResult.map(p => p.id);
+          const likesResult = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(postLikes)
+            .where(inArray(postLikes.postId, postIds));
+          totalLikes = Number(likesResult[0]?.count || 0);
+        }
+
         return {
           success: true,
           user,
+          stats: {
+            followingCount: followingList.length,
+            followersCount: followersList.length,
+            totalLikes,
+          },
         };
       } catch (error) {
         console.error('获取用户信息失败:', error);
