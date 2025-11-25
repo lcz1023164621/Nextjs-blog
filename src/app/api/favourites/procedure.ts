@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { protectedProcedure, createTRPCRouter } from '@/trpc/init';
+import { protectedProcedure, createTRPCRouter, baseProcedure } from '@/trpc/init';
 import { db } from '@/db';
 import { postFavorites, users, posts, postLikes } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
@@ -311,6 +311,104 @@ export const favoritesRouter = createTRPCRouter({
               likesCount,
               favoritesCount,
               favoritedAt: favorite.createdAt, // 添加收藏时间
+            };
+          })
+        );
+
+        return {
+          success: true,
+          favoritedPosts: postsWithStats,
+        };
+      } catch (error) {
+        console.error('获取收藏文章列表失败:', error);
+        
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '获取收藏文章列表失败',
+        });
+      }
+    }),
+
+  // 根据用户ID获取收藏的文章 - 公开路由
+  getFavoritedPostsByUserId: baseProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid('无效的用户ID'),
+        limit: z.number().min(1).max(100).default(20),
+        offset: z.number().min(0).default(0),
+      })
+    )
+    .query(async ({ input }) => {
+      const { userId, limit, offset } = input;
+
+      try {
+        // 查找用户
+        const user = await db.query.users.findFirst({
+          where: eq(users.id, userId),
+        });
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '用户不存在',
+          });
+        }
+
+        // 查询用户的收藏记录，包含文章信息
+        const favoritedPosts = await db.query.postFavorites.findMany({
+          where: eq(postFavorites.userId, userId),
+          limit,
+          offset,
+          orderBy: (postFavorites, { desc }) => [desc(postFavorites.createdAt)],
+          with: {
+            post: {
+              with: {
+                author: {
+                  columns: {
+                    id: true,
+                    username: true,
+                    avatar: true,
+                  },
+                },
+                images: {
+                  columns: {
+                    id: true,
+                    imageUrl: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        // 为每篇文章添加统计数据
+        const postsWithStats = await Promise.all(
+          favoritedPosts.map(async (favorite) => {
+            const post = favorite.post;
+
+            // 统计点赞数
+            const likesCountResult = await db
+              .select({ count: sql<number>`count(*)` })
+              .from(postLikes)
+              .where(eq(postLikes.postId, post.id));
+            const likesCount = Number(likesCountResult[0]?.count || 0);
+
+            // 统计收藏数
+            const favoritesCountResult = await db
+              .select({ count: sql<number>`count(*)` })
+              .from(postFavorites)
+              .where(eq(postFavorites.postId, post.id));
+            const favoritesCount = Number(favoritesCountResult[0]?.count || 0);
+
+            return {
+              ...post,
+              likesCount,
+              favoritesCount,
+              favoritedAt: favorite.createdAt,
             };
           })
         );

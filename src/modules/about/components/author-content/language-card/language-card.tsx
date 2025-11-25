@@ -18,6 +18,10 @@ export const LanguageCard = () => {
                     <Progress value={70} className="h-1" />
                 </div>
                 <div>
+                    <p className="text-sm text-gray-600 mb-1">Python</p>
+                    <Progress value={50} className="h-1" />
+                </div>
+                <div>
                     <p className="text-sm text-gray-600 mb-1">C</p>
                     <Progress value={50} className="h-1" />
                 </div>

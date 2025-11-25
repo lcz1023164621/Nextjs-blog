@@ -103,7 +103,10 @@ export const AuthInformation = ({ author }: AuthInformationProps) => {
       <span className="font-medium text-gray-900 leading-none">作者：</span>
       <HoverCard>
         <HoverCardTrigger asChild>
-          <button className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 rounded-full flex items-center">
+          <button 
+            onClick={() => router.push(`/user/${author.id}`)}
+            className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 rounded-full flex items-center"
+          >
             <Avatar className="h-7 w-7 shrink-0">
               <AvatarImage src={author.avatar || undefined} alt={author.name} />
               <AvatarFallback className="text-xs">

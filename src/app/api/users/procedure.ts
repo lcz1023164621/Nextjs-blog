@@ -334,6 +334,95 @@ export const userRouter = createTRPCRouter({
         });
       }
     }),
+
+  // 根据用户ID获取用户发表的文章 - 公开路由
+  getUserPostsByUserId: baseProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid('无效的用户ID'),
+        limit: z.number().min(1).max(100).default(20),
+        offset: z.number().min(0).default(0),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const { userId, limit, offset } = input;
+
+      try {
+        // 查找用户
+        const user = await db.query.users.findFirst({
+          where: eq(users.id, userId),
+        });
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '用户不存在',
+          });
+        }
+
+        // 查询用户发表的文章
+        const userPosts = await db.query.posts.findMany({
+          where: eq(posts.authorId, userId),
+          limit,
+          offset,
+          orderBy: (posts, { desc }) => [desc(posts.createdAt)],
+          with: {
+            author: {
+              columns: {
+                id: true,
+                username: true,
+                avatar: true,
+              },
+            },
+            images: {
+              columns: {
+                id: true,
+                imageUrl: true,
+              },
+            },
+            likes: true,
+          },
+        });
+
+        // 获取当前登录用户的ID（如果已登录）
+        let currentUserId: string | null = null;
+        if (ctx.userId) {
+          const currentUser = await db.query.users.findFirst({
+            where: eq(users.clerkId, ctx.userId),
+          });
+          currentUserId = currentUser?.id || null;
+        }
+
+        // 为每篇文章添加点赞状态和统计
+        const postsWithLikeStatus = userPosts.map(post => {
+          const isLiked = currentUserId
+            ? post.likes.some(like => like.userId === currentUserId)
+            : false;
+          
+          return {
+            ...post,
+            likesCount: post.likes.length,
+            isLiked,
+          };
+        });
+
+        return {
+          success: true,
+          posts: postsWithLikeStatus,
+        };
+      } catch (error) {
+        console.error('获取用户文章列表失败:', error);
+        
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '获取用户文章列表失败',
+        });
+      }
+    }),
 });
 
 // 导出类型

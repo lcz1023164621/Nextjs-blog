@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { protectedProcedure, createTRPCRouter } from '@/trpc/init';
+import { protectedProcedure, createTRPCRouter, baseProcedure } from '@/trpc/init';
 import { db } from '@/db';
 import { postLikes, users, posts } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -294,6 +294,81 @@ export const likeRouter = createTRPCRouter({
             ...like.post,
             likesCount: like.post.likes.length, // 添加点赞数统计
             likedAt: like.createdAt, // 添加点赞时间
+          })),
+        };
+      } catch (error) {
+        console.error('获取点赞文章列表失败:', error);
+        
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '获取点赞文章列表失败',
+        });
+      }
+    }),
+
+  // 根据用户ID获取点赞的文章 - 公开路由
+  getLikedPostsByUserId: baseProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid('无效的用户ID'),
+        limit: z.number().min(1).max(100).default(20),
+        offset: z.number().min(0).default(0),
+      })
+    )
+    .query(async ({ input }) => {
+      const { userId, limit, offset } = input;
+
+      try {
+        // 查找用户
+        const user = await db.query.users.findFirst({
+          where: eq(users.id, userId),
+        });
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '用户不存在',
+          });
+        }
+
+        // 查询用户的点赞记录，包含文章信息
+        const likedPosts = await db.query.postLikes.findMany({
+          where: eq(postLikes.userId, userId),
+          limit,
+          offset,
+          orderBy: (postLikes, { desc }) => [desc(postLikes.createdAt)],
+          with: {
+            post: {
+              with: {
+                author: {
+                  columns: {
+                    id: true,
+                    username: true,
+                    avatar: true,
+                  },
+                },
+                images: {
+                  columns: {
+                    id: true,
+                    imageUrl: true,
+                  },
+                },
+                likes: true,
+              },
+            },
+          },
+        });
+
+        return {
+          success: true,
+          likedPosts: likedPosts.map(like => ({
+            ...like.post,
+            likesCount: like.post.likes.length,
+            likedAt: like.createdAt,
           })),
         };
       } catch (error) {
