@@ -1,6 +1,6 @@
 此项目基于nextjs开发，使用shadcn作为组件库，neon postgresql和drizzleorm进行数据库管理,trpc进行数据交互，使用clerk进行身份验证,调用deepseek api集成翻译、搜索和生成标签功能<br><br>
 
-演示：[https://nextjs-blog-sigma-virid-40.vercel.app](https://nextjs-blog-sigma-virid-40.vercel.app)
+演示：[https://nextjs-blog-sigma-virid-40.vercel.app](https://nextjs-blog-sigma-virid-40.vercel.app)<br><br>
 安装nodejs环境，最好在v19以上 [https://nodejs.org/zh-cn](https://nodejs.org/zh-cn)<br><br>
 安装完成后打开项目文件执行<br><br>
 ```bash
